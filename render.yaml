@@ -1,0 +1,22 @@
+# Render free web service. The instance may sleep when idle; the GitHub
+# Actions hourly cron wakes it by calling /api/poll.
+services:
+  - type: web
+    name: instagram-monitor
+    runtime: docker
+    plan: free
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: SECRET
+        generateValue: true
+      - key: POLL_TOKEN
+        generateValue: true
+      - key: APIFY_TOKEN
+        sync: false
+      - key: APIFY_ACTOR
+        value: apify/instagram-scraper
+      - key: POLL_INTERVAL_HOURS
+        value: "1"
+      - key: POLL_BATCH_HOURS
+        value: "8"

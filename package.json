@@ -1,0 +1,21 @@
+{
+  "name": "instagram-monitor",
+  "version": "1.0.0",
+  "description": "Password-locked Instagram profile change monitor that polls hourly via the Apify API and stores snapshots.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "poll": "node src/cli-poll.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "archiver": "^8.0.0",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2"
+  }
+}
