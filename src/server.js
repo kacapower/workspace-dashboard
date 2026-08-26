@@ -310,6 +310,8 @@ export function createApp({ config = loadConfig(), store = new Store(config.data
       out[name] = {
         monthlyUnits: lim.monthlyUnits,
         resetDay: lim.resetDay || 1,
+        startDate: lim.startDate || "",
+        endDate: lim.endDate || "",
         currentUsage: usageUnits
       };
     }
@@ -319,13 +321,15 @@ export function createApp({ config = loadConfig(), store = new Store(config.data
   app.post('/api/config/providers/:provider', requireAuth, async (req, res) => {
     try {
       const provider = req.params.provider;
-      const { monthlyUnits, resetDay, currentUsage } = req.body;
+      const { monthlyUnits, resetDay, startDate, endDate, currentUsage } = req.body;
       
       store.updateConfig((cfg) => {
         cfg.providerLimits = cfg.providerLimits || {};
         cfg.providerLimits[provider] = cfg.providerLimits[provider] || {};
         if (monthlyUnits !== undefined) cfg.providerLimits[provider].monthlyUnits = Number(monthlyUnits);
         if (resetDay !== undefined) cfg.providerLimits[provider].resetDay = Number(resetDay);
+        if (startDate !== undefined) cfg.providerLimits[provider].startDate = startDate;
+        if (endDate !== undefined) cfg.providerLimits[provider].endDate = endDate;
         return cfg;
       });
 
