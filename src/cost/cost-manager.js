@@ -63,7 +63,7 @@ export const DEFAULT_LIMITS = {
     tier: TIER.FREE,
     unitCostUsd: 0,
     freeUnitsPerMonth: 500,
-    dailyUnits: 16,
+    dailyUnits: Math.floor(500 / new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()),
     monthlyUnits: 500,
   },
   /**
@@ -79,7 +79,7 @@ export const DEFAULT_LIMITS = {
     tier: TIER.LOW_COST,
     unitCostUsd: 0.001,
     freeUnitsPerMonth: 0,
-    dailyUnits: 240,
+    dailyUnits: Math.floor(5000 / new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()),
     monthlyUnits: 5000,
   },
   /** Lobstr bills per result credit; same free-allowance caveat as Bright Data. */
@@ -87,14 +87,14 @@ export const DEFAULT_LIMITS = {
     tier: TIER.LOW_COST,
     unitCostUsd: 0.002,
     freeUnitsPerMonth: 0,
-    dailyUnits: 60,
+    dailyUnits: Math.floor(1000 / new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()),
     monthlyUnits: 1000,
   },
   llm: {
     tier: TIER.FREE,
     unitCostUsd: 0,
     freeUnitsPerMonth: 500,
-    dailyUnits: 20,
+    dailyUnits: Math.floor(500 / new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()),
     monthlyUnits: 500,
   },
 };
