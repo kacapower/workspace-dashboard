@@ -274,8 +274,17 @@ export function createApp({ config = loadConfig(), store = new Store(config.data
    * sleeps there is no reliable background timer to defer the work to. Returns
    * 409 while another run holds the lock rather than starting a second one.
    */
+  let pollHistory = [];
+
   app.post('/api/poll', requirePollAccess, async (req, res) => {
     try {
+      const now = Date.now();
+      pollHistory = pollHistory.filter(t => now - t < 60000);
+      if (pollHistory.length >= 2) {
+        return res.status(429).json({ ok: false, error: 'Rate limit exceeded: max 2 polls per minute. Please wait.' });
+      }
+      pollHistory.push(now);
+
       const force = req.query.force === '1' || req.query.force === 'true';
       const restore = req.query.restore === '1' || req.query.restore === 'true';
       const result = await runCronCycle(store, config, { force, restore, owner: 'http', lock: pollLock });
