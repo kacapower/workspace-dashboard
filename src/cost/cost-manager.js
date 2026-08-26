@@ -55,9 +55,9 @@ export const DEFAULT_LIMITS = {
   apify: {
     tier: TIER.LOW_COST,
     unitCostUsd: 0.0027,
-    freeUnitsPerMonth: 300,
-    dailyUnits: 60,
-    monthlyUnits: 300,
+    freeUnitsPerMonth: 1851, // $5.00 free tier / $0.0027 per unit = ~1851 units
+    dailyUnits: Math.floor(1851 / new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()), // Dynamically divided by days in current month
+    monthlyUnits: 1851,
   },
   rapidapi: {
     tier: TIER.FREE,
