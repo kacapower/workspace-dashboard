@@ -568,7 +568,7 @@ function renderDashboardPage() {
     : `<span class="chip chip-idle">No poll yet</span>`;
 
   $('#main').innerHTML = `
-    ${pageHeader('Dashboard', 'Overview of every tracked profile over time.')}
+    ${pageHeader('Dashboard', 'Telemetry and anomaly detection across tracked profiles.')}
     <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-2">
         <span class="chip chip-ok"><span class="live-dot"></span>live</span>
