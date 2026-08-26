@@ -928,8 +928,8 @@ async function renderSpherePage() {
               <input type="number" id="cfg-limit-${name}" class="input w-full !py-1.5 !text-sm" value="${p.monthlyUnits || 0}" />
             </div>
             <div>
-              <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Billing Reset Day (1-31)</label>
-              <input type="number" min="1" max="31" id="cfg-reset-${name}" class="input w-full !py-1.5 !text-sm" value="${p.resetDay || 1}" />
+              <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Next Billing Date</label>
+              <input type="date" id="cfg-reset-${name}" class="input w-full !py-1.5 !text-sm" value="${nextResetStr}" />
             </div>
             <div>
               <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Override Usage</label>
