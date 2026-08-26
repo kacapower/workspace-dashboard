@@ -421,7 +421,7 @@ function renderProfileTimeline(username) {
             ${renderStories(username, snap.stories)}
           </div>
         </div>
-      `).join('')}
+      `}).join('')}
     </div>`;
 }
 
@@ -908,7 +908,18 @@ async function renderSpherePage() {
     const res = await fetch('/api/config/providers');
     if (res.ok) {
       providerConfig = await res.json();
-      providerSettingsHtml = Object.entries(providerConfig).map(([name, p]) => `
+      providerSettingsHtml = Object.entries(providerConfig).map(([name, p]) => {
+      const now = new Date();
+      let rDay = p.resetDay || 1;
+      let rm = now.getMonth();
+      let ry = now.getFullYear();
+      if (now.getDate() >= rDay) {
+        rm++;
+        if (rm > 11) { rm = 0; ry++; }
+      }
+      const nextResetStr = `${ry}-${String(rm+1).padStart(2, '0')}-${String(rDay).padStart(2, '0')}`;
+
+      return `
         <div class="mb-4 last:mb-0">
           <h3 class="font-bold text-md capitalize text-[#1a1a1a] dark:text-white mb-2">${name}</h3>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -947,7 +958,12 @@ async function renderSpherePage() {
     btn.addEventListener('click', async (e) => {
       const provider = e.target.dataset.provider;
       const limit = $(`#cfg-limit-${provider}`).value;
-      const reset = $(`#cfg-reset-${provider}`).value;
+      const resetVal = $(`#cfg-reset-${provider}`).value;
+      let reset = '';
+      if (resetVal) {
+        const d = new Date(resetVal);
+        if (!isNaN(d.getTime())) reset = d.getDate();
+      }
       const usage = $(`#cfg-usage-${provider}`).value;
       
       const body = {};
