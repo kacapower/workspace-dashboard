@@ -323,15 +323,14 @@ export function createApp({ config = loadConfig(), store = new Store(config.data
       const provider = req.params.provider;
       const { monthlyUnits, resetDay, startDate, endDate, currentUsage } = req.body;
       
-      store.updateConfig((cfg) => {
-        cfg.providerLimits = cfg.providerLimits || {};
-        cfg.providerLimits[provider] = cfg.providerLimits[provider] || {};
-        if (monthlyUnits !== undefined) cfg.providerLimits[provider].monthlyUnits = Number(monthlyUnits);
-        if (resetDay !== undefined) cfg.providerLimits[provider].resetDay = Number(resetDay);
-        if (startDate !== undefined) cfg.providerLimits[provider].startDate = startDate;
-        if (endDate !== undefined) cfg.providerLimits[provider].endDate = endDate;
-        return cfg;
-      });
+      const cfg = store.getConfig();
+      cfg.providerLimits = cfg.providerLimits || {};
+      cfg.providerLimits[provider] = cfg.providerLimits[provider] || {};
+      if (monthlyUnits !== undefined) cfg.providerLimits[provider].monthlyUnits = Number(monthlyUnits);
+      if (resetDay !== undefined) cfg.providerLimits[provider].resetDay = Number(resetDay);
+      if (startDate !== undefined) cfg.providerLimits[provider].startDate = startDate;
+      if (endDate !== undefined) cfg.providerLimits[provider].endDate = endDate;
+      store.setConfig({ providerLimits: cfg.providerLimits });
 
       if (currentUsage !== undefined) {
         stack.costManager.repo.update((doc) => {
