@@ -1,0 +1,6 @@
+{
+  "_comment": "src/config.js does `import 'dotenv/config'`, which is a bare npm specifier Deno cannot resolve on its own. Mapping it keeps the shared config module usable unchanged in both runtimes; under Deno there is no .env file so it is a harmless no-op and the real values come from `supabase secrets set`.",
+  "imports": {
+    "dotenv/config": "npm:dotenv@17/config"
+  }
+}

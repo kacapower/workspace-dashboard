@@ -1,0 +1,375 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+::selection {
+  background: #ff5530;
+  color: #fff;
+}
+
+:root {
+  color-scheme: light dark;
+  --bg: #f7f8fa;
+  --card: #ffffff;
+  --card-border: #eaecf0;
+  --soft: #f2f3f5;
+  --ink: #0a0a0a;
+  --slate: #45515e;
+  --muted: #8e8e93;
+  --faint: #a8aab2;
+  --hairline: #e5e7eb;
+  --shadow: 0 1px 2px rgba(10, 10, 10, 0.04), 0 8px 24px -12px rgba(10, 10, 10, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --card-border: #262d38;
+    --soft: #1c2430;
+    --ink: #e6edf3;
+    --slate: #a8b3c0;
+    --muted: #8b98a5;
+    --faint: #6b7683;
+    --hairline: #303840;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  }
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 9999px;
+  padding: 11px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-primary {
+  background: #0a0a0a;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: #222222;
+}
+
+.btn-primary:disabled {
+  background: var(--hairline);
+  color: var(--faint);
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+}
+
+.btn-secondary:hover {
+  background: var(--soft);
+}
+
+.btn-tertiary {
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--card-border);
+}
+
+.btn-tertiary:hover {
+  background: var(--bg);
+}
+
+.input {
+  width: 100%;
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  padding: 11px 16px;
+  font-size: 15px;
+  background: var(--card);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.08);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.chip-ok { background: #e8ffea; color: #1ba673; }
+.chip-error { background: #ffe9e6; color: #ff5530; }
+.chip-idle { background: var(--soft); color: var(--muted); }
+.chip-info { background: #e8f0ff; color: #1456f0; }
+.chip-story { background: #fff0e6; color: #ff7a1a; }
+
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 9999px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  transition: all 0.15s ease;
+}
+
+.nav-pill:hover {
+  color: var(--ink);
+  background: var(--soft);
+}
+
+.nav-pill.active {
+  background: #0a0a0a;
+  color: #ffffff;
+  border-color: #0a0a0a;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.nav-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.nav-item:hover {
+  color: var(--ink);
+  background: var(--soft);
+}
+
+.nav-item.active {
+  background: #0a0a0a;
+  color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav-item.active {
+    background: #e6edf3;
+    color: #0d1117;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav-pill.active {
+    background: #e6edf3;
+    color: #0d1117;
+    border-color: #e6edf3;
+  }
+}
+
+@media (max-width: 640px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--slate);
+  user-select: none;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #0a0a0a;
+  cursor: pointer;
+}
+
+.fade-in { animation: fadeIn 0.25s ease both; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---- Toast ---- */
+.toast-show { animation: toastIn 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translate(-50%, 16px) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+/* ---- Card entrance (staggered) ---- */
+.card-enter { animation: cardEnter 0.4s ease both; }
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---- Skeleton shimmer ---- */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--soft);
+  border-radius: 10px;
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* ---- Lightbox ---- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(3, 4, 8, 0.92);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+.lightbox.show { opacity: 1; visibility: visible; }
+.lb-stage {
+  max-width: min(92vw, 1100px);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.lb-media { max-width: 100%; max-height: 74vh; display: flex; align-items: center; justify-content: center; }
+.lb-media img, .lb-media video {
+  max-width: 100%;
+  max-height: 74vh;
+  border-radius: 16px;
+  box-shadow: 0 24px 64px -16px rgba(0, 0, 0, 0.8);
+  object-fit: contain;
+}
+.lb-caption { color: rgba(230, 236, 250, 0.9); font-size: 13px; font-weight: 600; text-align: center; }
+.lb-close, .lb-prev, .lb-next {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.lb-close:hover, .lb-prev:hover, .lb-next:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
+.lb-close { top: 18px; right: 18px; }
+.lb-prev { left: 18px; top: 50%; transform: translateY(-50%); }
+.lb-next { right: 18px; top: 50%; transform: translateY(-50%); }
+.lb-prev:hover { transform: translateY(-50%) scale(1.05); }
+.lb-next:hover { transform: translateY(-50%) scale(1.05); }
+@media (max-width: 640px) {
+  .lb-close { top: 12px; right: 12px; }
+  .lb-prev { left: 8px; }
+  .lb-next { right: 8px; }
+}
+
+/* ---- Live indicator ---- */
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #1ba673;
+  margin-right: 6px;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(27, 166, 115, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(27, 166, 115, 0); }
+}
+
+/* ---- Focus visibility for accessibility ---- */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #1456f0;
+  outline-offset: 2px;
+}
+
+/* ---- Sparkline canvas ---- */
+canvas[data-spark] { width: 100%; height: 36px; display: block; }
+
+/* ---- Empty state ---- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 16px;
+  color: var(--muted);
+  text-align: center;
+}
+.empty-state svg { width: 40px; height: 40px; opacity: 0.4; }
+
+/* ---- Subtle scrollbar ---- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
