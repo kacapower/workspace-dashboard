@@ -435,6 +435,7 @@ function renderHistorySections() {
       <div class="flex items-center justify-between gap-3 mb-5">
         <h2 class="text-lg font-bold truncate">@${escapeHtml(username)}</h2>
       </div>
+      ${renderHeatmap(username)}
       <div id="timeline-${escapeHtml(username)}">${renderProfileTimeline(username)}</div>
     </section>
   `).join('');
@@ -594,12 +595,15 @@ function renderDashboardPage() {
   });
 }
 
-function renderHeatmap() {
+function renderHeatmap(filterUsername = null) {
   if (!historyData || !historyData.profiles) return '';
   
   const counts = {};
   let maxCount = 0;
-  for (const p of Object.values(historyData.profiles)) {
+  const profilesToIterate = filterUsername && historyData.profiles[filterUsername]
+    ? { [filterUsername]: historyData.profiles[filterUsername] }
+    : historyData.profiles;
+  for (const p of Object.values(profilesToIterate)) {
     for (const snap of p) {
       if (!snap.at) continue;
       // Force date to IST
@@ -691,7 +695,7 @@ function renderHeatmap() {
 
   return `
     <section class="card p-6 mb-6">
-      <h2 class="text-lg font-bold mb-4">Activity Heatmap</h2>
+      <h2 class="text-lg font-bold mb-4">${filterUsername ? `@${filterUsername} Activity` : `Activity Heatmap`}</h2>
       <div class="flex">
         <!-- Y-axis labels -->
         <div class="flex flex-col pr-2 pt-[18px] text-[10px] text-[#8e8e93] justify-between pb-[6px]" style="height: 140px;">
@@ -786,7 +790,7 @@ function renderGraphsPage() {
 
   $('#main').innerHTML = `
     ${pageHeader('Graphs', 'Track follower and following trends over time.')}
-    ${renderHeatmap()}
+    ${renderHeatmap(graphUser)}
     <div class="flex flex-col sm:flex-row gap-3 mb-5">
       <select id="graph-user-select" class="input w-full sm:w-64">${userOpts}</select>
       <div class="flex gap-2 flex-wrap">
