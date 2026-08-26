@@ -581,7 +581,6 @@ function renderDashboardPage() {
       <div class="rounded-2xl bg-[#f7f8fa] dark:bg-[#1c2430] p-4"><div class="text-sm font-bold">${fmtTime(s.lastPollAt)}</div><div class="text-xs font-semibold text-[#8e8e93] mt-1">last poll</div></div>
       <div class="rounded-2xl bg-[#f7f8fa] dark:bg-[#1c2430] p-4"><div class="text-sm font-bold">${fmtTime(s.nextPollAt)}</div><div class="text-xs font-semibold text-[#8e8e93] mt-1">next poll</div></div>
     </div>
-    ${renderHeatmap()}
     ${renderProfileCards()}
     <div class="grid gap-6 mt-6">${renderHistorySections()}</div>`;
 
@@ -724,6 +723,7 @@ function renderGraphsPage() {
 
   $('#main').innerHTML = `
     ${pageHeader('Graphs', 'Track follower and following trends over time.')}
+    ${renderHeatmap()}
     <div class="flex flex-col sm:flex-row gap-3 mb-5">
       <select id="graph-user-select" class="input w-full sm:w-64">${userOpts}</select>
       <div class="flex gap-2 flex-wrap">
