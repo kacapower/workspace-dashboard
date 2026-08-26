@@ -421,7 +421,7 @@ function renderProfileTimeline(username) {
             ${renderStories(username, snap.stories)}
           </div>
         </div>
-      `}).join('')}
+      `).join('')}
     </div>`;
 }
 
@@ -940,7 +940,7 @@ async function renderSpherePage() {
             </div>
           </div>
         </div>
-      `).join('') || '<p class="text-[#8e8e93] text-sm">No APIs configured in secrets.</p>';
+      `}).join('') || '<p class="text-[#8e8e93] text-sm">No APIs configured in secrets.</p>';
     }
   } catch (err) {
     providerSettingsHtml = `<div class="text-[#ff5530]">Error loading API config: ${escapeHtml(err.message)}</div>`;
