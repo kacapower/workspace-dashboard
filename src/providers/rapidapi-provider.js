@@ -28,7 +28,7 @@ export class RapidApiProvider extends InstagramProvider {
     const rapid = config?.rapidapi || {};
     const canStories = !!rapid.key && !!rapid.host && (!!rapid.storiesPath || !!rapid.highlightsPath);
     super({
-      name: 'rapidapi',
+      name: rapid.name || 'rapidapi',
       tier: TIER.FREE,
       unitCostUsd: 0,
       features: [
@@ -72,14 +72,28 @@ export class RapidApiProvider extends InstagramProvider {
 
   async getProfile(username, opts = {}) {
     if (!this.rapid.profilePath) {
-      throw new ProviderError('rapidapi profile path not configured (RAPIDAPI_PROFILE_PATH)', {
+      throw new ProviderError(`${this.name} profile path not configured`, {
         kind: ERROR_KIND.AUTH,
         provider: this.name,
       });
     }
     try {
       const raw = await this.get(this.rapid.profilePath, username);
-      return providerResult(normalizeProfileShape(raw, { username }), {
+      const profile = normalizeProfileShape(raw, { username });
+      
+      let url = profile.profilePicUrlHD || profile.profile_pic_url_hd || profile.profilePicUrlHd || profile.profilePicUrl || null;
+      const rawData = raw.data || raw;
+      const hdField = this.rapid.hdAvatarField || 'profile_pic_url_hd';
+      if (rawData[hdField]) url = rawData[hdField];
+      else if (rawData.profilePicUrlHD) url = rawData.profilePicUrlHD;
+      else if (rawData.profile_pic_url_hd) url = rawData.profile_pic_url_hd;
+      else if (rawData.profilePicUrlHd) url = rawData.profilePicUrlHd;
+
+      if (url) {
+          profile.profilePicUrl = url;
+      }
+
+      return providerResult(profile, {
         units: 1,
         provider: this.name,
         feature: FEATURE.PROFILE,
@@ -92,8 +106,20 @@ export class RapidApiProvider extends InstagramProvider {
 
   async getAvatar(username, opts = {}) {
     const res = await this.getProfile(username, opts);
+    let url = res.data?.profilePicUrlHD || res.data?.profile_pic_url_hd || res.data?.profilePicUrlHd || res.data?.profilePicUrl || null;
+    
+    // Check raw payload directly for the HD field variants to be safe
+    if (res.raw) {
+      const rawData = res.raw.data || res.raw;
+      const hdField = this.rapid.hdAvatarField || 'profile_pic_url_hd';
+      if (rawData[hdField]) url = rawData[hdField];
+      else if (rawData.profilePicUrlHD) url = rawData.profilePicUrlHD;
+      else if (rawData.profile_pic_url_hd) url = rawData.profile_pic_url_hd;
+      else if (rawData.profilePicUrlHd) url = rawData.profilePicUrlHd;
+    }
+
     return providerResult(
-      { url: res.data?.profilePicUrl || null, profile: res.data },
+      { url, profile: res.data },
       { units: res.units, provider: this.name, feature: FEATURE.AVATAR }
     );
   }

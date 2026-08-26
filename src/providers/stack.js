@@ -35,8 +35,52 @@ export function createStack(store, config, { runner = null, storiesFetcher = nul
   if (runner) apifyOpts.runner = runner;
   if (storiesFetcher) apifyOpts.storiesFetcher = storiesFetcher;
 
+  const rapidApiKey = config.rapidapi?.key;
+  const rapidProviders = rapidApiKey ? [
+    {
+      name: 'rapidapi-moadnaciri02',
+      key: rapidApiKey,
+      host: 'instagram-profile-data-scraper.p.rapidapi.com',
+      profilePath: '/instagram/profile',
+      usernameParam: 'username',
+      hdAvatarField: 'profile_pic_url_hd'
+    },
+    {
+      name: 'rapidapi-api14',
+      key: rapidApiKey,
+      host: 'instagram-scraper-api14.p.rapidapi.com',
+      profilePath: '/v1/info',
+      usernameParam: 'username_or_id_or_url',
+      hdAvatarField: 'profilePicUrlHD'
+    },
+    {
+      name: 'rapidapi-cheapest',
+      key: rapidApiKey,
+      host: 'instagram-cheapest.p.rapidapi.com',
+      profilePath: '/api/v1/instagram/user',
+      usernameParam: 'username',
+      hdAvatarField: 'profile_pic_url_hd'
+    },
+    {
+      name: 'rapidapi-jotucker',
+      key: rapidApiKey,
+      host: 'instagram-scraper2.p.rapidapi.com',
+      profilePath: '/user_info',
+      usernameParam: 'user_id',
+      hdAvatarField: 'profile_pic_url_hd'
+    },
+    {
+      name: 'rapidapi-20251',
+      key: rapidApiKey,
+      host: 'instagram-scraper-20251.p.rapidapi.com',
+      profilePath: '/userinfo/',
+      usernameParam: 'username_or_id',
+      hdAvatarField: 'profile_pic_url_hd'
+    }
+  ].map(r => new RapidApiProvider({ ...config, rapidapi: { ...config.rapidapi, ...r } })) : [new RapidApiProvider(config)];
+
   const list = providers || [
-    new RapidApiProvider(config),
+    ...rapidProviders,
     new ApifyProvider(config, apifyOpts),
     new BrightDataProvider(config),
     new LobstrProvider(config),
