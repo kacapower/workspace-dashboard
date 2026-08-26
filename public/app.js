@@ -407,7 +407,7 @@ function renderProfileTimeline(username) {
       ${reversed.map((snap) => `
         <div class="relative fade-in">
           <span class="absolute -left-[31px] top-1 h-3 w-3 rounded-full border-2 border-[#0a0a0a] dark:border-white bg-white dark:bg-[#0d1117]"></span>
-          <div class="card p-5">
+          <div class="card p-3 sm:p-5">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
               <div class="flex items-center gap-2">
                 <span class="font-semibold">${fmtTime(snap.at)}</span>
@@ -431,7 +431,7 @@ function renderHistorySections() {
     return `<div class="text-[#8e8e93] text-sm py-8 text-center">No profiles yet. Add your first Instagram profile in Config.</div>`;
   }
   return usernames.map((username) => `
-    <section class="card p-4 sm:p-6">
+    <section class="mobile-bleed-card">
       <div class="flex items-center justify-between gap-3 mb-5">
         <h2 class="text-lg font-bold truncate">@${escapeHtml(username)}</h2>
       </div>

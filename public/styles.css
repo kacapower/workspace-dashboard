@@ -429,3 +429,24 @@ canvas[data-spark] { width: 100%; height: 36px; display: block; }
 .status-val.highlight {
   color: #ff5530;
 }
+
+
+.mobile-bleed-card {
+  background: var(--card);
+  border-top: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--card-border);
+  margin-left: -16px;
+  margin-right: -16px;
+  padding: 20px 16px;
+  margin-bottom: 24px;
+}
+@media (min-width: 640px) {
+  .mobile-bleed-card {
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 24px;
+    margin-bottom: 32px;
+  }
+}
