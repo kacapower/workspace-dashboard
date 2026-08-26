@@ -922,17 +922,18 @@ async function renderSpherePage() {
       return `
         <div class="mb-4 last:mb-0">
           <h3 class="font-bold text-md capitalize text-[#1a1a1a] dark:text-white mb-2">${name}</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div>
               <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Monthly Limit (Units)</label>
               <input type="number" id="cfg-limit-${name}" class="input w-full !py-1.5 !text-sm" value="${p.monthlyUnits || 0}" />
             </div>
             <div>
-              <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Billing Reset Day (1-31)</label>
-              <div class="flex items-center gap-2">
-                <input type="number" min="1" max="31" id="cfg-reset-${name}" class="input w-20 !py-1.5 !text-sm" value="${p.resetDay || 1}" />
-                <span class="text-xs text-[#8e8e93]">Next: ${new Date(nextResetStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-              </div>
+              <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Billing Start Date</label>
+              <input type="date" id="cfg-start-${name}" class="input w-full !py-1.5 !text-sm" value="${p.startDate || ''}" />
+            </div>
+            <div>
+              <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Billing End Date</label>
+              <input type="date" id="cfg-end-${name}" class="input w-full !py-1.5 !text-sm" value="${p.endDate || ''}" />
             </div>
             <div>
               <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Override Usage</label>
@@ -961,12 +962,14 @@ async function renderSpherePage() {
     btn.addEventListener('click', async (e) => {
       const provider = e.target.dataset.provider;
       const limit = $(`#cfg-limit-${provider}`).value;
-      const reset = $(`#cfg-reset-${provider}`).value;
+      const start = $(`#cfg-start-${provider}`).value;
+      const end = $(`#cfg-end-${provider}`).value;
       const usage = $(`#cfg-usage-${provider}`).value;
       
       const body = {};
       if (limit !== '') body.monthlyUnits = limit;
-      if (reset !== '') body.resetDay = reset;
+      if (start !== '') body.startDate = start;
+      if (end !== '') body.endDate = end;
       if (usage !== '') body.currentUsage = usage;
 
       btn.disabled = true;
