@@ -151,7 +151,7 @@ function changeItem(username, change) {
         ${img}
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
-            <span class="chip chip-info !py-0 !px-1 text-[10px]">New Post</span>
+            <span class="chip chip-info">New Post</span>
             ${time}
           </div>
           <div class="text-xs text-[#45515e] dark:text-[#a8b3c0] truncate mt-0.5">
@@ -300,14 +300,14 @@ function profileStatCard(username) {
           <div class="text-xs font-semibold mt-0.5">${fmtTime(snap.at)}</div>
         </div>
       </div>
-      <div class="mt-3 grid grid-cols-3 gap-2">
+      <div class="mt-4 flex flex-col">
         ${statBox('followers', count(prof.followersCount))}
         ${statBox('following', count(prof.followingCount))}
         ${statBox('posts', count(prof.postsCount))}
       </div>
       <div class="mt-3">
         <div class="flex items-center justify-between mb-1">
-          <span class="text-[10px] font-semibold text-[#8e8e93] uppercase tracking-wide">follower trend</span>
+          <span class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide">7-Day Trajectory</span>
         </div>
         <canvas data-spark="${escapeHtml(username)}"></canvas>
       </div>
