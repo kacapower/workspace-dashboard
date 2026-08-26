@@ -19,12 +19,14 @@ const ICONS = {
   config: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
   data: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
   gallery: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>',
+  quota: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
   logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>',
 };
 
 const PAGES = [
   { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard },
   { id: 'leaderboard', label: 'Leaderboard', icon: ICONS.leaderboard },
+  { id: 'quota', label: 'API Quota', icon: ICONS.quota },
   { id: 'config', label: 'Config', icon: ICONS.config },
   { id: 'data', label: 'Data', icon: ICONS.data },
   { id: 'gallery', label: 'Gallery', icon: ICONS.gallery },
@@ -1080,8 +1082,61 @@ function renderShell() {
   renderPage();
 }
 
+async function renderQuotaPage() {
+  $('#main').innerHTML = `
+    ${pageHeader('API Quota', 'Track your API limits and usage.')}
+    <div class="card p-6 min-h-[200px] flex items-center justify-center">
+      <div class="animate-pulse flex items-center gap-2"><span class="h-4 w-4 rounded-full bg-[#eaecf0] block"></span> Loading quota...</div>
+    </div>`;
+
+  try {
+    const res = await fetch('/api/usage');
+    if (!res.ok) throw new Error('Failed to load usage data.');
+    const usage = await res.json();
+    
+    let html = `${pageHeader('API Quota', 'Track your API limits and usage.')}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+    
+    for (const [name, p] of Object.entries(usage.providers)) {
+      const isExhausted = p.usedPct >= 100;
+      const barColor = isExhausted ? 'bg-[#ff5530]' : 'bg-[#1ba673]';
+      html += `
+        <div class="card p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-lg capitalize text-[#1a1a1a] dark:text-white">${name}</h3>
+            <span class="chip ${isExhausted ? 'chip-err' : 'chip-ok'}">${isExhausted ? 'Exhausted' : 'Healthy'}</span>
+          </div>
+          <div class="mb-2 flex justify-between text-sm">
+            <span class="text-[#8e8e93]">Monthly Usage</span>
+            <span class="font-medium text-[#1a1a1a] dark:text-white">${p.month.units} / ${p.monthlyCeiling || '∞'} units</span>
+          </div>
+          <div class="w-full bg-[#eaecf0] dark:bg-[#2a3441] rounded-full h-2 mb-4 overflow-hidden">
+            <div class="${barColor} h-2 rounded-full" style="width: ${p.usedPct}%"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 text-sm mt-4">
+            <div>
+              <div class="text-[#8e8e93] text-xs">Today</div>
+              <div class="font-semibold text-[#45515e] dark:text-[#a8b3c0]">${p.day.units} / ${p.dailyLimit}</div>
+            </div>
+            <div>
+              <div class="text-[#8e8e93] text-xs">Remaining</div>
+              <div class="font-semibold text-[#45515e] dark:text-[#a8b3c0]">${p.remainingMonth}</div>
+            </div>
+          </div>
+        </div>`;
+    }
+    
+    html += `</div>`;
+    $('#main').innerHTML = html;
+  } catch (err) {
+    $('#main').innerHTML = `${pageHeader('API Quota', 'Track your API limits and usage.')}
+      <div class="card p-6"><div class="text-[#ff5530]">Error: ${escapeHtml(err.message)}</div></div>`;
+  }
+}
+
 async function renderPage() {
   if (page === 'leaderboard') return renderLeaderboardPage();
+  if (page === 'quota') return renderQuotaPage();
   if (page === 'config') return renderConfigPage();
   if (page === 'data') return renderDataPage();
   if (page === 'gallery') return renderGalleryPage();
