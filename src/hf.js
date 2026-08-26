@@ -196,6 +196,7 @@ export async function syncToHF(store, config) {
 
   for (const p of cfg.profiles || []) {
     const user = p.username;
+    if (!store.mediaDir) continue; // Skip local media sync if using abstract store
     const dir = path.join(store.mediaDir, user);
     if (!fs.existsSync(dir)) continue;
     for (const name of fs.readdirSync(dir)) {
@@ -387,6 +388,7 @@ export async function restoreFromHF(config, store) {
   }
 
   for (const m of mediaFiles) {
+    if (!store.mediaDir) continue; // Skip local media restore if using abstract store
     const dest = path.join(store.mediaDir, m.user, m.name);
     if (fs.existsSync(dest)) continue;
     try {
