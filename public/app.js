@@ -1067,6 +1067,11 @@ function renderShell() {
   app.querySelectorAll('.nav-item[data-page]').forEach((btn) => {
     btn.addEventListener('click', () => {
       page = btn.dataset.page;
+      
+      // Update sidebar visual feedback immediately
+      app.querySelectorAll('.nav-item[data-page]').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      
       setMenuOpen(false);
       renderPage();
     });

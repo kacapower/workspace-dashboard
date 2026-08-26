@@ -173,6 +173,7 @@ body {
   color: var(--muted);
   transition: all 0.15s ease;
   text-align: left;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .nav-item svg {
@@ -184,6 +185,10 @@ body {
 .nav-item:hover {
   color: var(--ink);
   background: var(--soft);
+}
+
+.nav-item:active {
+  transform: scale(0.97);
 }
 
 .nav-item.active {
