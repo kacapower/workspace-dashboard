@@ -1,3 +1,11 @@
+---
+title: Insta Fixer
+emoji: 📸
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+---
 # Instagram Monitor
 
 A password-locked app that watches **multiple Instagram profiles** and records **everything that changes** — profile picture, bio, display name, follower counts, website, new posts, and stories/highlights — polling periodically via the [Apify](https://apify.com) Instagram scraper actors.
