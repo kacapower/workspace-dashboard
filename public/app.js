@@ -602,20 +602,37 @@ function renderHeatmap() {
   for (const p of Object.values(historyData.profiles)) {
     for (const snap of p) {
       if (!snap.at) continue;
-      const d = new Date(snap.at);
-      const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-      counts[dateStr] = (counts[dateStr] || 0) + (snap.changes?.length || 1);
-      if (counts[dateStr] > maxCount) maxCount = counts[dateStr];
+      // Force date to IST
+      const d = new Date(new Date(snap.at).getTime() + (330 * 60000));
+      const dateStr = d.getUTCFullYear() + '-' + String(d.getUTCMonth()+1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+      
+      if (!counts[dateStr]) counts[dateStr] = { count: 0, posts: 0, stories: 0, followers: 0, other: 0 };
+      
+      counts[dateStr].count += (snap.changes?.length || 1);
+      
+      for (const c of (snap.changes || [])) {
+        if (c.type === 'post') counts[dateStr].posts++;
+        else if (c.type === 'story') counts[dateStr].stories++;
+        else if (c.field === 'followersCount') {
+          counts[dateStr].followers += (c.to - c.from);
+        } else {
+          counts[dateStr].other++;
+        }
+      }
+      
+      if (counts[dateStr].count > maxCount) maxCount = counts[dateStr].count;
     }
   }
 
-  const daysToTrack = 180;
-  const today = new Date();
-  today.setHours(0,0,0,0);
+  const daysToTrack = 365;
+  const now = new Date();
+  // Current time in UTC + IST offset = IST time
+  const today = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (330 * 60000));
+  today.setUTCHours(0,0,0,0);
   
   let squares = '';
   // Align grid to week so today is at the correct row
-  const dayOfWeek = today.getDay();
+  const dayOfWeek = today.getUTCDay();
   // Pad the start so the last day falls on dayOfWeek
   const totalCells = daysToTrack + (6 - dayOfWeek);
   const startOffset = totalCells - daysToTrack;
@@ -624,23 +641,48 @@ function renderHeatmap() {
     squares += `<div class="w-3.5 h-3.5 rounded-sm opacity-0"></div>`;
   }
 
+  const cellWidth = 18; // w-3.5 (14px) + gap-1 (4px)
+  let currentMonth = -1;
+  let monthsHtml = '';
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
   for (let i = daysToTrack - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const d = new Date(today.getTime() - i * 86400000);
+    const dateStr = d.getUTCFullYear() + '-' + String(d.getUTCMonth()+1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
     
-    const count = counts[dateStr] || 0;
-    
-    let bg = 'bg-[#eaecf0] dark:bg-[#2d333b]';
-    if (count > 0) {
-      const intensity = count / maxCount;
-      if (intensity > 0.75) bg = 'bg-[#1ba673]';
-      else if (intensity > 0.5) bg = 'bg-[#26c78a]';
-      else if (intensity > 0.25) bg = 'bg-[#43e6a6]';
-      else bg = 'bg-[#8bf0c6]';
+    if (d.getUTCMonth() !== currentMonth) {
+      currentMonth = d.getUTCMonth();
+      const cellIndex = startOffset + (daysToTrack - 1 - i);
+      const colIndex = Math.floor(cellIndex / 7);
+      monthsHtml += `<div class="absolute" style="left: ${colIndex * cellWidth}px">${monthNames[currentMonth]}</div>`;
     }
     
-    squares += `<div class="w-3.5 h-3.5 rounded-sm ${bg}" title="${dateStr}: ${count} activity"></div>`;
+    const stat = counts[dateStr] || { count: 0 };
+    const count = stat.count;
+    
+    let bg = 'bg-[#ebedf0] dark:bg-[#161b22]';
+    if (count > 0) {
+      const intensity = count / maxCount;
+      if (intensity > 0.75) bg = 'bg-[#216e39] dark:bg-[#39d353]';
+      else if (intensity > 0.5) bg = 'bg-[#30a14e] dark:bg-[#26a641]';
+      else if (intensity > 0.25) bg = 'bg-[#40c463] dark:bg-[#006d32]';
+      else bg = 'bg-[#9be9a8] dark:bg-[#0e4429]';
+    }
+    
+    const displayDate = monthNames[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear();
+    let tooltip = count === 0 ? `No activity on ${displayDate}` : `${count} activity on ${displayDate}`;
+    
+    if (count > 0) {
+      let details = [];
+      if (stat.posts) details.push(`${stat.posts} posts`);
+      if (stat.stories) details.push(`${stat.stories} stories`);
+      if (stat.followers > 0) details.push(`+${stat.followers} followers`);
+      if (stat.followers < 0) details.push(`${stat.followers} followers`);
+      if (stat.other) details.push(`${stat.other} other`);
+      if (details.length) tooltip += ` (${details.join(', ')})`;
+    }
+    
+    squares += `<div class="w-3.5 h-3.5 rounded-sm ${bg}" title="${tooltip}"></div>`;
   }
 
   for (let i = dayOfWeek + 1; i <= 6; i++) {
@@ -650,18 +692,39 @@ function renderHeatmap() {
   return `
     <section class="card p-6 mb-6">
       <h2 class="text-lg font-bold mb-4">Activity Heatmap</h2>
-      <div class="overflow-x-auto pb-2" dir="rtl">
-        <div class="grid grid-rows-7 grid-flow-col gap-1 w-max" dir="ltr">
-          ${squares}
+      <div class="flex">
+        <!-- Y-axis labels -->
+        <div class="flex flex-col pr-2 pt-[18px] text-[10px] text-[#8e8e93] justify-between pb-[6px]" style="height: 140px;">
+          <div class="h-3.5 leading-none opacity-0">Sun</div>
+          <div class="h-3.5 leading-none">Mon</div>
+          <div class="h-3.5 leading-none opacity-0">Tue</div>
+          <div class="h-3.5 leading-none">Wed</div>
+          <div class="h-3.5 leading-none opacity-0">Thu</div>
+          <div class="h-3.5 leading-none">Fri</div>
+          <div class="h-3.5 leading-none opacity-0">Sat</div>
+        </div>
+        
+        <!-- Grid and X-axis -->
+        <div class="flex-1 overflow-x-auto pb-2" dir="rtl">
+          <div class="relative w-max" dir="ltr">
+            <!-- X-axis labels (Months) -->
+            <div class="h-[18px] text-[10px] text-[#8e8e93] relative w-full mb-1">
+              ${monthsHtml}
+            </div>
+            <!-- Grid -->
+            <div class="grid grid-rows-7 grid-flow-col gap-1 w-max">
+              ${squares}
+            </div>
+          </div>
         </div>
       </div>
       <div class="text-[10px] text-[#8e8e93] mt-2 flex justify-end items-center gap-1 font-semibold uppercase">
         <span>Less</span>
-        <div class="w-3 h-3 rounded-sm bg-[#eaecf0] dark:bg-[#2d333b]"></div>
-        <div class="w-3 h-3 rounded-sm bg-[#8bf0c6]"></div>
-        <div class="w-3 h-3 rounded-sm bg-[#43e6a6]"></div>
-        <div class="w-3 h-3 rounded-sm bg-[#26c78a]"></div>
-        <div class="w-3 h-3 rounded-sm bg-[#1ba673]"></div>
+        <div class="w-3 h-3 rounded-sm bg-[#ebedf0] dark:bg-[#161b22]"></div>
+        <div class="w-3 h-3 rounded-sm bg-[#9be9a8] dark:bg-[#0e4429]"></div>
+        <div class="w-3 h-3 rounded-sm bg-[#40c463] dark:bg-[#006d32]"></div>
+        <div class="w-3 h-3 rounded-sm bg-[#30a14e] dark:bg-[#26a641]"></div>
+        <div class="w-3 h-3 rounded-sm bg-[#216e39] dark:bg-[#39d353]"></div>
         <span>More</span>
       </div>
     </section>`;
