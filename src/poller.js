@@ -327,7 +327,15 @@ export async function poll(store, config, { force = false, runner = runActorSync
     const due = force || isDue(entry, config, now, throttle);
     if (!due) {
       if (entry.isPrivate) {
-        pendingPings.push(entry);
+        // Hourly privacy ping is disabled to save requests.
+        // It will only be checked when fully due (e.g. every 8 hours).
+        results.push({
+          username: entry.username,
+          ok: true,
+          due: false,
+          throttleFactor: throttle,
+          nextPollAt: nextPollFor(entry, config, throttle),
+        });
       } else {
         results.push({
           username: entry.username,
@@ -460,5 +468,25 @@ async function pingPrivateAccounts(store, config, entries, stack) {
     if (!item || item.noResults || !item.username) continue;
     map.set(item.username, { isPrivate: !!(item.private || item.isPrivate) });
   }
+
+  // Fallback for providers like RapidAPI that don't support batching and only return the first username.
+  // Since we already paid `entries.length` units upfront, we fetch the rest individually at 0 units.
+  const unhandled = entries.filter((e) => !map.has(e.username));
+  for (const entry of unhandled) {
+    try {
+      const uRes = await stack.router.call(FEATURE.PROFILE, {
+        username: entry.username,
+        priority: PRIORITY.LOW,
+        units: 0,
+      });
+      const uItem = uRes.data;
+      if (uItem && !uItem.noResults && uItem.username) {
+        map.set(uItem.username, { isPrivate: !!(uItem.private || uItem.isPrivate) });
+      }
+    } catch (err) {
+      // Keep going if one account fails
+    }
+  }
+
   return map;
 }
