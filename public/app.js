@@ -928,8 +928,11 @@ async function renderSpherePage() {
               <input type="number" id="cfg-limit-${name}" class="input w-full !py-1.5 !text-sm" value="${p.monthlyUnits || 0}" />
             </div>
             <div>
-              <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Next Billing Date</label>
-              <input type="date" id="cfg-reset-${name}" class="input w-full !py-1.5 !text-sm" value="${nextResetStr}" />
+              <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Billing Reset Day (1-31)</label>
+              <div class="flex items-center gap-2">
+                <input type="number" min="1" max="31" id="cfg-reset-${name}" class="input w-20 !py-1.5 !text-sm" value="${p.resetDay || 1}" />
+                <span class="text-xs text-[#8e8e93]">Next: ${new Date(nextResetStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              </div>
             </div>
             <div>
               <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Override Usage</label>
@@ -958,12 +961,7 @@ async function renderSpherePage() {
     btn.addEventListener('click', async (e) => {
       const provider = e.target.dataset.provider;
       const limit = $(`#cfg-limit-${provider}`).value;
-      const resetVal = $(`#cfg-reset-${provider}`).value;
-      let reset = '';
-      if (resetVal) {
-        const d = new Date(resetVal);
-        if (!isNaN(d.getTime())) reset = d.getDate();
-      }
+      const reset = $(`#cfg-reset-${provider}`).value;
       const usage = $(`#cfg-usage-${provider}`).value;
       
       const body = {};
