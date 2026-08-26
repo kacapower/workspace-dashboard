@@ -37,14 +37,14 @@ export function buildChangeAlert(username, result) {
   }
   lines.push(...types);
   if (result.newStories) lines.push(`\n📥 ${result.newStories} new stor${result.newStories === 1 ? 'y' : 'ies'} downloaded`);
-  lines.push(`\n⏱️ <i>Polled at ${new Date(result.at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</i>`);
+  lines.push(`\n⏱️ <i>Polled at ${new Date(result.at).toLocaleString([], { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} IST</i>`);
   return lines.join('\n');
 }
 
 export function buildDigest(store, config) {
   const cfg = store.getConfig();
   const h = store.getHistory();
-  const lines = ['[Instagram Monitor] Daily summary', `Date: ${new Date().toLocaleDateString()}`];
+  const lines = ['[Instagram Monitor] Daily summary', `Date: ${new Date().toLocaleDateString([], { timeZone: 'Asia/Kolkata' })}`];
   lines.push(`Snapshots: ${cfg.totalSnapshots || 0} · Total changes: ${cfg.totalChanges || 0}`);
   for (const p of cfg.profiles || []) {
     const snaps = (h.profiles[p.username] || []).filter((s) => Date.parse(s.at) >= Date.now() - 24 * 60 * 60 * 1000);

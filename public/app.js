@@ -75,7 +75,7 @@ function showToast(message, ok = true) {
 function fmtTime(iso) {
   if (!iso) return 'never';
   const d = new Date(iso);
-  return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString([], { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' IST';
 }
 
 function fmtBytes(bytes) {
