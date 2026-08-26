@@ -21,6 +21,7 @@ const ICONS = {
   gallery: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>',
   quota: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
   graphs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>',
+  sphere: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>',
   logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>',
 };
 
@@ -28,6 +29,7 @@ const PAGES = [
   { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard },
   { id: 'leaderboard', label: 'Leaderboard', icon: ICONS.leaderboard },
   { id: 'graphs', label: 'Graphs', icon: ICONS.graphs },
+  { id: 'sphere', label: 'Sphere', icon: ICONS.sphere },
   { id: 'quota', label: 'API Quota', icon: ICONS.quota },
   { id: 'config', label: 'Config', icon: ICONS.config },
   { id: 'data', label: 'Data', icon: ICONS.data },
@@ -36,6 +38,7 @@ const PAGES = [
 
 let graphUser = null;
 let graphWindow = '30';
+let graphMetric = 'followers';
 
 const $ = (sel) => app.querySelector(sel);
 
@@ -578,6 +581,7 @@ function renderDashboardPage() {
       <div class="rounded-2xl bg-[#f7f8fa] dark:bg-[#1c2430] p-4"><div class="text-sm font-bold">${fmtTime(s.lastPollAt)}</div><div class="text-xs font-semibold text-[#8e8e93] mt-1">last poll</div></div>
       <div class="rounded-2xl bg-[#f7f8fa] dark:bg-[#1c2430] p-4"><div class="text-sm font-bold">${fmtTime(s.nextPollAt)}</div><div class="text-xs font-semibold text-[#8e8e93] mt-1">next poll</div></div>
     </div>
+    ${renderHeatmap()}
     ${renderProfileCards()}
     <div class="grid gap-6 mt-6">${renderHistorySections()}</div>`;
 
@@ -589,6 +593,79 @@ function renderDashboardPage() {
       renderDashboardPage();
     });
   });
+}
+
+function renderHeatmap() {
+  if (!historyData || !historyData.profiles) return '';
+  
+  const counts = {};
+  let maxCount = 0;
+  for (const p of Object.values(historyData.profiles)) {
+    for (const snap of p) {
+      if (!snap.at) continue;
+      const d = new Date(snap.at);
+      const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      counts[dateStr] = (counts[dateStr] || 0) + (snap.changes?.length || 1);
+      if (counts[dateStr] > maxCount) maxCount = counts[dateStr];
+    }
+  }
+
+  const daysToTrack = 180;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  
+  let squares = '';
+  // Align grid to week so today is at the correct row
+  const dayOfWeek = today.getDay();
+  // Pad the start so the last day falls on dayOfWeek
+  const totalCells = daysToTrack + (6 - dayOfWeek);
+  const startOffset = totalCells - daysToTrack;
+  
+  for (let i = 0; i < startOffset; i++) {
+    squares += `<div class="w-3.5 h-3.5 rounded-sm opacity-0"></div>`;
+  }
+
+  for (let i = daysToTrack - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    
+    const count = counts[dateStr] || 0;
+    
+    let bg = 'bg-[#eaecf0] dark:bg-[#2d333b]';
+    if (count > 0) {
+      const intensity = count / maxCount;
+      if (intensity > 0.75) bg = 'bg-[#1ba673]';
+      else if (intensity > 0.5) bg = 'bg-[#26c78a]';
+      else if (intensity > 0.25) bg = 'bg-[#43e6a6]';
+      else bg = 'bg-[#8bf0c6]';
+    }
+    
+    squares += `<div class="w-3.5 h-3.5 rounded-sm ${bg}" title="${dateStr}: ${count} activity"></div>`;
+  }
+
+  for (let i = dayOfWeek + 1; i <= 6; i++) {
+    squares += `<div class="w-3.5 h-3.5 rounded-sm opacity-0"></div>`;
+  }
+
+  return `
+    <section class="card p-6 mb-6">
+      <h2 class="text-lg font-bold mb-4">Activity Heatmap</h2>
+      <div class="overflow-x-auto pb-2" dir="rtl">
+        <div class="grid grid-rows-7 grid-flow-col gap-1 w-max" dir="ltr">
+          ${squares}
+        </div>
+      </div>
+      <div class="text-[10px] text-[#8e8e93] mt-2 flex justify-end items-center gap-1 font-semibold uppercase">
+        <span>Less</span>
+        <div class="w-3 h-3 rounded-sm bg-[#eaecf0] dark:bg-[#2d333b]"></div>
+        <div class="w-3 h-3 rounded-sm bg-[#8bf0c6]"></div>
+        <div class="w-3 h-3 rounded-sm bg-[#43e6a6]"></div>
+        <div class="w-3 h-3 rounded-sm bg-[#26c78a]"></div>
+        <div class="w-3 h-3 rounded-sm bg-[#1ba673]"></div>
+        <span>More</span>
+      </div>
+    </section>`;
 }
 
 function renderLeaderboardPage() {
@@ -650,8 +727,12 @@ function renderGraphsPage() {
     <div class="flex flex-col sm:flex-row gap-3 mb-5">
       <select id="graph-user-select" class="input w-full sm:w-64">${userOpts}</select>
       <div class="flex gap-2 flex-wrap">
+        <button class="btn-pill graph-metric ${graphMetric === 'followers' ? 'btn-primary' : 'btn-tertiary'}" data-metric="followers">Followers</button>
+        <button class="btn-pill graph-metric ${graphMetric === 'following' ? 'btn-primary' : 'btn-tertiary'}" data-metric="following">Following</button>
+      </div>
+      <div class="flex gap-2 flex-wrap sm:ml-auto">
         ${windowOpts.map(([key, label]) => `
-          <button class="btn-pill ${graphWindow === key ? 'btn-primary' : 'btn-tertiary'} graph-window" data-window="${key}">${label}</button>`).join('')}
+          <button class="btn-pill ${graphWindow === key ? 'btn-secondary' : 'btn-tertiary'} graph-window" data-window="${key}">${label}</button>`).join('')}
       </div>
     </div>
     <div class="card p-6 flex flex-col h-[65vh] min-h-[400px]">
@@ -665,6 +746,13 @@ function renderGraphsPage() {
   $('#graph-user-select').addEventListener('change', (e) => {
     graphUser = e.target.value;
     renderGraphsPage();
+  });
+
+  app.querySelectorAll('.graph-metric').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      graphMetric = btn.dataset.metric;
+      renderGraphsPage();
+    });
   });
 
   app.querySelectorAll('.graph-window').forEach((btn) => {
@@ -686,13 +774,11 @@ function drawUserChart() {
   const filtered = snaps.filter(s => (!cutoff || Date.parse(s.at) >= cutoff) && s.profile);
   
   const dates = [];
-  const followers = [];
-  const following = [];
+  const data = [];
 
   for (const s of filtered) {
     dates.push(new Date(s.at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }));
-    followers.push(s.profile.followersCount || 0);
-    following.push(s.profile.followingCount || 0);
+    data.push(graphMetric === 'followers' ? (s.profile.followersCount || 0) : (s.profile.followingCount || 0));
   }
 
   if (window.myUserChart) window.myUserChart.destroy();
@@ -707,30 +793,20 @@ function drawUserChart() {
     return;
   }
 
+  const isFollowers = graphMetric === 'followers';
+
   window.myUserChart = new Chart(canvas, {
     type: 'line',
     data: {
       labels: dates,
       datasets: [
         {
-          label: 'Followers',
-          data: followers,
-          borderColor: '#1ba673',
-          backgroundColor: '#1ba67320',
-          yAxisID: 'y',
+          label: isFollowers ? 'Followers' : 'Following',
+          data: data,
+          borderColor: isFollowers ? '#1ba673' : '#ff5530',
+          backgroundColor: isFollowers ? '#1ba67320' : '#ff553020',
           tension: 0.3,
           fill: true,
-          borderWidth: 2,
-          pointRadius: 2
-        },
-        {
-          label: 'Following',
-          data: following,
-          borderColor: '#ff5530',
-          backgroundColor: 'transparent',
-          yAxisID: 'y1',
-          tension: 0.3,
-          fill: false,
           borderWidth: 2,
           pointRadius: 2
         }
@@ -745,28 +821,19 @@ function drawUserChart() {
           type: 'linear', 
           display: true, 
           position: 'left',
-          title: { display: true, text: 'Followers' },
-          ticks: { precision: 0 }
-        },
-        y1: { 
-          type: 'linear', 
-          display: true, 
-          position: 'right',
-          title: { display: true, text: 'Following' },
-          grid: { drawOnChartArea: false },
+          title: { display: true, text: isFollowers ? 'Followers' : 'Following' },
           ticks: { precision: 0 }
         }
       },
       plugins: {
-        legend: { position: 'bottom', labels: { usePointStyle: true } }
+        legend: { display: false }
       },
       interaction: { mode: 'index', intersect: false }
     }
   });
 }
 
-async function renderConfigPage() {
-  const s = status;
+async function renderSpherePage() {
   let providerSettingsHtml = '<div class="text-[#8e8e93] text-sm">Loading API config...</div>';
   let providerConfig = {};
 
@@ -801,6 +868,44 @@ async function renderConfigPage() {
     providerSettingsHtml = `<div class="text-[#ff5530]">Error loading API config: ${escapeHtml(err.message)}</div>`;
   }
 
+  $('#main').innerHTML = `
+    ${pageHeader('Sphere', 'API Quota Configuration & Management')}
+    <section class="card p-6 mb-6">
+      <h2 class="text-lg font-bold mb-4">API Configuration</h2>
+      <p class="text-sm text-[#8e8e93] mb-4">Set your limits, billing cycle reset dates (e.g. 15th of the month), and usage overrides for auto-detected APIs.</p>
+      ${providerSettingsHtml}
+    </section>`;
+
+  app.querySelectorAll('.save-api-cfg').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const provider = e.target.dataset.provider;
+      const limit = $(`#cfg-limit-${provider}`).value;
+      const reset = $(`#cfg-reset-${provider}`).value;
+      const usage = $(`#cfg-usage-${provider}`).value;
+      
+      const body = {};
+      if (limit !== '') body.monthlyUnits = limit;
+      if (reset !== '') body.resetDay = reset;
+      if (usage !== '') body.currentUsage = usage;
+
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      try {
+        await api(`/api/config/providers/${provider}`, { method: 'POST', body: JSON.stringify(body) });
+        showToast('API Configuration saved successfully');
+        renderSpherePage();
+      } catch (err) {
+        showToast(err.message, false);
+        btn.disabled = false;
+        btn.textContent = 'Save';
+      }
+    });
+  });
+}
+
+async function renderConfigPage() {
+  const s = status;
+  
   const autoInterval = (p) => p.isPrivate ? p.batchIntervalHours || s.batchIntervalHours : s.intervalHours;
   const profiles = (s.profiles || []).map((p, idx) => {
     const avatar = latestAvatar(p.username);
@@ -831,14 +936,6 @@ async function renderConfigPage() {
 
   $('#main').innerHTML = `
     ${pageHeader('Config', 'Profiles, polling intervals and alerts.')}
-
-    <section class="card p-6 mb-6">
-      <h2 class="text-lg font-bold mb-4">API Configuration</h2>
-      <p class="text-sm text-[#8e8e93] mb-4">Set your limits, billing cycle reset dates (e.g. 15th of the month), and usage overrides for auto-detected APIs.</p>
-      ${providerSettingsHtml}
-    </section>
-
-    <section class="card p-6 mb-6">
       <h2 class="text-lg font-bold mb-4">Add a profile</h2>
       <form id="add-profile-form" class="flex flex-col gap-3">
         <div class="flex flex-col sm:flex-row gap-3">
@@ -1122,31 +1219,7 @@ async function renderDataPage() {
     }
   });
 
-  app.querySelectorAll('.save-api-cfg').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const provider = e.target.dataset.provider;
-      const limit = $(`#cfg-limit-${provider}`).value;
-      const reset = $(`#cfg-reset-${provider}`).value;
-      const usage = $(`#cfg-usage-${provider}`).value;
-      
-      const body = {};
-      if (limit !== '') body.monthlyUnits = limit;
-      if (reset !== '') body.resetDay = reset;
-      if (usage !== '') body.currentUsage = usage;
 
-      btn.disabled = true;
-      btn.textContent = 'Saving...';
-      try {
-        await api(`/api/config/providers/${provider}`, { method: 'POST', body: JSON.stringify(body) });
-        showToast('API Configuration saved successfully');
-        renderConfigPage();
-      } catch (err) {
-        showToast(err.message, false);
-        btn.disabled = false;
-        btn.textContent = 'Save';
-      }
-    });
-  });
 
   const hfBtn = $('#hf-sync-btn');
   if (hfBtn) {
@@ -1353,6 +1426,7 @@ async function renderQuotaPage() {
 async function renderPage() {
   if (page === 'leaderboard') return renderLeaderboardPage();
   if (page === 'graphs') return renderGraphsPage();
+  if (page === 'sphere') return renderSpherePage();
   if (page === 'quota') return renderQuotaPage();
   if (page === 'config') return renderConfigPage();
   if (page === 'data') return renderDataPage();
