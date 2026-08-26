@@ -118,14 +118,16 @@ function changeItem(username, change) {
       </div>`;
   }
   if (change.type === 'field') {
-    const before = change.from ? escapeHtml(String(change.from)) : '<span class="text-[#a8aab2]">—</span>';
-    const after = change.to ? escapeHtml(String(change.to)) : '<span class="text-[#a8aab2]">removed</span>';
+    const rawBefore = change.from ? String(change.from) : '—';
+    const rawAfter = change.to ? String(change.to) : 'removed';
+    const before = change.from ? escapeHtml(rawBefore) : '<span class="text-[#a8aab2]">—</span>';
+    const after = change.to ? escapeHtml(rawAfter) : '<span class="text-[#a8aab2]">removed</span>';
     return `
       <div class="text-sm py-1 border-b border-[#eaecf0] dark:border-[#2a3441] last:border-0 flex items-center justify-between">
         <span class="font-semibold text-[#8e8e93]">${fieldLabel(change.field)}</span>
         <div class="flex items-center gap-2 text-right">
-          <span class="text-[#a8aab2] line-through truncate max-w-[100px]" title="${before}">${before}</span>
-          <span class="text-[#ff5530] font-medium truncate max-w-[150px]" title="${after}">${after}</span>
+          <span class="text-[#a8aab2] line-through truncate max-w-[100px]" title="${escapeHtml(rawBefore)}">${before}</span>
+          <span class="text-[#ff5530] font-medium truncate max-w-[150px]" title="${escapeHtml(rawAfter)}">${after}</span>
         </div>
       </div>`;
   }
