@@ -130,11 +130,17 @@ export function schedule(config, store, options = {}) {
   const minutes = Math.min(config.pollIntervalHours * 60, 60);
   const ms = minutes * 60 * 1000;
   const onPoll = options.onPoll || poll;
-  const timer = setInterval(() => {
+  
+  const run = () => {
     onPoll(store, config).catch((err) => {
       console.error('[poller] scheduled poll failed:', err.message);
     });
-  }, ms);
+  };
+
+  // Run immediately on startup so we don't sleep through missed polls
+  setTimeout(run, 5000); 
+
+  const timer = setInterval(run, ms);
   if (timer.unref && !options.keepAlive) timer.unref();
   return timer;
 }
