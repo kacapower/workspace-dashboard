@@ -10,7 +10,7 @@ export async function sendTelegram(config, text) {
       const res = await fetch(`https://api.telegram.org/bot${config.telegramBotToken}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: true }),
+        body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
       });
       const body = await res.json().catch(() => null);
       results.push({ chatId, ok: res.ok, error: body?.description || null });
@@ -22,7 +22,7 @@ export async function sendTelegram(config, text) {
 }
 
 export function buildChangeAlert(username, result) {
-  const lines = [`[Instagram Monitor]`, `@${username} — ${result.changeCount} change${result.changeCount === 1 ? '' : 's'}`];
+  const lines = [`🔔 <b>@${username} Update</b>`, `Found ${result.changeCount} change${result.changeCount === 1 ? '' : 's'}:`];
   const types = [];
   const counts = {};
   for (const c of result.changes || []) {
@@ -31,13 +31,13 @@ export function buildChangeAlert(username, result) {
     else if (c.type === 'avatar') counts.avatar = (counts.avatar || 0) + 1;
     else counts[c.field || c.type] = (counts[c.field || c.type] || 0) + 1;
   }
-  const label = { story: 'new stories saved', post: 'new posts', avatar: 'profile picture change', fullName: 'display name change', biography: 'bio change', followersCount: 'follower count change', postsCount: 'post count change', isPrivate: 'privacy change' };
+  const label = { story: 'Stories Saved 📸', post: 'New Posts 🖼️', avatar: 'Profile Picture Changed 👤', fullName: 'Display Name Changed 📛', biography: 'Bio Changed 📝', followersCount: 'Follower Count Changed 📈', postsCount: 'Post Count Changed 📊', isPrivate: 'Privacy Changed 🔒' };
   for (const [key, count] of Object.entries(counts)) {
-    types.push(`  - ${count} × ${label[key] || key.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+    types.push(`  • ${count} × ${label[key] || key}`);
   }
   lines.push(...types);
-  lines.push(`Polled at ${new Date(result.at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`);
-  if (result.newStories) lines.push(`${result.newStories} new stor${result.newStories === 1 ? 'y' : 'ies'} downloaded`);
+  if (result.newStories) lines.push(`\n📥 ${result.newStories} new stor${result.newStories === 1 ? 'y' : 'ies'} downloaded`);
+  lines.push(`\n⏱️ <i>Polled at ${new Date(result.at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</i>`);
   return lines.join('\n');
 }
 

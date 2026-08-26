@@ -121,42 +121,41 @@ function changeItem(username, change) {
     const before = change.from ? escapeHtml(String(change.from)) : '<span class="text-[#a8aab2]">—</span>';
     const after = change.to ? escapeHtml(String(change.to)) : '<span class="text-[#a8aab2]">removed</span>';
     return `
-      <div class="text-sm">
-        <div class="font-semibold mb-1">${fieldLabel(change.field)} changed</div>
-        <div class="flex flex-col gap-1 text-[#45515e] dark:text-[#a8b3c0]">
-          <div class="flex gap-2"><span class="text-[#a8aab2] shrink-0">before</span><span>${before}</span></div>
-          <div class="flex gap-2"><span class="text-[#ff5530] shrink-0 font-semibold">after</span><span>${after}</span></div>
+      <div class="text-sm py-1 border-b border-[#eaecf0] dark:border-[#2a3441] last:border-0 flex items-center justify-between">
+        <span class="font-semibold text-[#8e8e93]">${fieldLabel(change.field)}</span>
+        <div class="flex items-center gap-2 text-right">
+          <span class="text-[#a8aab2] line-through truncate max-w-[100px]" title="${before}">${before}</span>
+          <span class="text-[#ff5530] font-medium truncate max-w-[150px]" title="${after}">${after}</span>
         </div>
       </div>`;
   }
   if (change.type === 'post') {
     const info = change.to || {};
-    const img = info.mediaFile ? `<img class="w-full rounded-xl border border-[#eaecf0] object-cover" src="${escapeHtml(mediaUrl(username, info.mediaFile))}" alt="new post" />` : '';
+    const img = info.mediaFile ? `<img class="w-10 h-10 rounded-md object-cover flex-shrink-0" src="${escapeHtml(mediaUrl(username, info.mediaFile))}" alt="post" />` : '';
     const permalink = info.shortcode ? `https://www.instagram.com/p/${escapeHtml(info.shortcode)}/` : null;
-    const caption = info.caption ? `<p class="mt-2 text-sm text-[#45515e] dark:text-[#a8b3c0] line-clamp-3">${escapeHtml(info.caption)}</p>` : '';
-    const time = info.timestamp ? `<span class="text-xs text-[#8e8e93]">${fmtTime(info.timestamp)}</span>` : '';
+    const time = info.timestamp ? `<span class="text-[10px] text-[#8e8e93]">${fmtTime(info.timestamp)}</span>` : '';
     return `
-      <div>
-        <div class="flex items-center gap-2 mb-2">
-          <span class="chip chip-info">New post</span>
-          ${time}
-        </div>
+      <div class="flex items-center gap-3 py-2 border-b border-[#eaecf0] dark:border-[#2a3441] last:border-0">
         ${img}
-        ${caption}
-        <div class="mt-2 flex items-center gap-4 text-xs font-semibold text-[#8e8e93]">
-          <span>Likes ${info.likesCount ?? '—'}</span>
-          <span>Comments ${info.commentsCount ?? '—'}</span>
-          ${permalink ? `<a class="text-[#1456f0] underline" href="${permalink}" target="_blank" rel="noopener">view on Instagram</a>` : ''}
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="chip chip-info !py-0 !px-1 text-[10px]">New Post</span>
+            ${time}
+          </div>
+          <div class="text-xs text-[#45515e] dark:text-[#a8b3c0] truncate mt-0.5">
+            ${info.caption ? escapeHtml(info.caption) : '<i class="text-[#a8aab2]">No caption</i>'}
+          </div>
         </div>
+        ${permalink ? `<a href="${permalink}" target="_blank" rel="noopener" class="text-xs text-[#1456f0] flex-shrink-0">View</a>` : ''}
       </div>`;
   }
   if (change.type === 'story') {
-    return `<div class="text-sm font-semibold">A new story was saved${change.to?.highlightTitle ? ` to highlight "${escapeHtml(change.to.highlightTitle)}"` : ''} (uploaded ${fmtTime(change.to?.timestamp)})</div>`;
+    return `<div class="text-xs py-1 border-b border-[#eaecf0] dark:border-[#2a3441] last:border-0 flex justify-between"><span class="font-semibold text-[#8e8e93]">New Story</span> <span>${fmtTime(change.to?.timestamp)}</span></div>`;
   }
   if (change.type === 'removed') {
-    return `<div class="text-sm font-semibold">A post was removed${change.from ? ` (<span class="text-[#ff5530]">${escapeHtml(change.from)}</span>)` : ''}</div>`;
+    return `<div class="text-xs py-1 border-b border-[#eaecf0] dark:border-[#2a3441] last:border-0"><span class="text-[#ff5530] font-semibold">Post Removed</span> ${change.from ? escapeHtml(change.from) : ''}</div>`;
   }
-  return '<div class="text-sm text-[#45515e]">Unknown change</div>';
+  return '<div class="text-xs text-[#45515e] py-1">Unknown change</div>';
 }
 
 function renderStories(username, stories) {
