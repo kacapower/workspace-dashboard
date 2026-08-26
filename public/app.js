@@ -765,8 +765,42 @@ function drawUserChart() {
   });
 }
 
-function renderConfigPage() {
+async function renderConfigPage() {
   const s = status;
+  let providerSettingsHtml = '<div class="text-[#8e8e93] text-sm">Loading API config...</div>';
+  let providerConfig = {};
+
+  try {
+    const res = await fetch('/api/config/providers');
+    if (res.ok) {
+      providerConfig = await res.json();
+      providerSettingsHtml = Object.entries(providerConfig).map(([name, p]) => `
+        <div class="mb-4 last:mb-0">
+          <h3 class="font-bold text-md capitalize text-[#1a1a1a] dark:text-white mb-2">${name}</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Monthly Limit (Units)</label>
+              <input type="number" id="cfg-limit-${name}" class="input w-full !py-1.5 !text-sm" value="${p.monthlyUnits || 0}" />
+            </div>
+            <div>
+              <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Billing Reset Day (1-31)</label>
+              <input type="number" min="1" max="31" id="cfg-reset-${name}" class="input w-full !py-1.5 !text-sm" value="${p.resetDay || 1}" />
+            </div>
+            <div>
+              <label class="text-[10px] uppercase font-semibold text-[#8e8e93] block mb-1">Override Usage</label>
+              <div class="flex gap-2">
+                <input type="number" id="cfg-usage-${name}" class="input flex-1 !py-1.5 !text-sm" placeholder="${p.currentUsage}" />
+                <button class="btn-pill btn-secondary !py-1 !px-3 text-xs save-api-cfg" data-provider="${name}">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('') || '<p class="text-[#8e8e93] text-sm">No APIs configured in secrets.</p>';
+    }
+  } catch (err) {
+    providerSettingsHtml = `<div class="text-[#ff5530]">Error loading API config: ${escapeHtml(err.message)}</div>`;
+  }
+
   const autoInterval = (p) => p.isPrivate ? p.batchIntervalHours || s.batchIntervalHours : s.intervalHours;
   const profiles = (s.profiles || []).map((p, idx) => {
     const avatar = latestAvatar(p.username);
@@ -797,6 +831,12 @@ function renderConfigPage() {
 
   $('#main').innerHTML = `
     ${pageHeader('Config', 'Profiles, polling intervals and alerts.')}
+
+    <section class="card p-6 mb-6">
+      <h2 class="text-lg font-bold mb-4">API Configuration</h2>
+      <p class="text-sm text-[#8e8e93] mb-4">Set your limits, billing cycle reset dates (e.g. 15th of the month), and usage overrides for auto-detected APIs.</p>
+      ${providerSettingsHtml}
+    </section>
 
     <section class="card p-6 mb-6">
       <h2 class="text-lg font-bold mb-4">Add a profile</h2>
@@ -1080,6 +1120,32 @@ async function renderDataPage() {
     } catch (err) {
       showToast(err.message, false);
     }
+  });
+
+  app.querySelectorAll('.save-api-cfg').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const provider = e.target.dataset.provider;
+      const limit = $(`#cfg-limit-${provider}`).value;
+      const reset = $(`#cfg-reset-${provider}`).value;
+      const usage = $(`#cfg-usage-${provider}`).value;
+      
+      const body = {};
+      if (limit !== '') body.monthlyUnits = limit;
+      if (reset !== '') body.resetDay = reset;
+      if (usage !== '') body.currentUsage = usage;
+
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      try {
+        await api(`/api/config/providers/${provider}`, { method: 'POST', body: JSON.stringify(body) });
+        showToast('API Configuration saved successfully');
+        renderConfigPage();
+      } catch (err) {
+        showToast(err.message, false);
+        btn.disabled = false;
+        btn.textContent = 'Save';
+      }
+    });
   });
 
   const hfBtn = $('#hf-sync-btn');

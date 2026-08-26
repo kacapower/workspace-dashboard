@@ -295,6 +295,61 @@ export function createApp({ config = loadConfig(), store = new Store(config.data
     }
   });
 
+  app.get('/api/config/providers', requireAuth, (req, res) => {
+    const limits = stack.costManager.limits;
+    const doc = store.readJson('usage.json', { providers: {} });
+    const out = {};
+    for (const [name, lim] of Object.entries(limits)) {
+      if (name === 'apify' && !config.apifyToken) continue;
+      if (name === 'rapidapi' && !config.rapidapi.key) continue;
+      if (name === 'brightdata' && !config.brightdata.apiKey) continue;
+      if (name === 'lobstr' && !config.lobstr.apiKey) continue;
+      if (name === 'llm' && !process.env.ANTHROPIC_AUTH_TOKEN) continue;
+      
+      const usageUnits = doc.providers[name]?.month?.units || 0;
+      out[name] = {
+        monthlyUnits: lim.monthlyUnits,
+        resetDay: lim.resetDay || 1,
+        currentUsage: usageUnits
+      };
+    }
+    res.json(out);
+  });
+
+  app.post('/api/config/providers/:provider', requireAuth, async (req, res) => {
+    try {
+      const provider = req.params.provider;
+      const { monthlyUnits, resetDay, currentUsage } = req.body;
+      
+      store.updateConfig((cfg) => {
+        cfg.providerLimits = cfg.providerLimits || {};
+        cfg.providerLimits[provider] = cfg.providerLimits[provider] || {};
+        if (monthlyUnits !== undefined) cfg.providerLimits[provider].monthlyUnits = Number(monthlyUnits);
+        if (resetDay !== undefined) cfg.providerLimits[provider].resetDay = Number(resetDay);
+        return cfg;
+      });
+
+      if (currentUsage !== undefined) {
+        stack.costManager.repo.update((doc) => {
+          const now = new Date();
+          const state = stack.costManager.repo.providerState(doc, provider, now);
+          state.month.units = Number(currentUsage);
+          return doc;
+        });
+      }
+
+      const { buildLimits } = await import('./cost/cost-manager.js');
+      stack.costManager.limits = buildLimits({
+        ...config, 
+        providerLimits: { ...config.providerLimits, ...store.getConfig().providerLimits }
+      });
+
+      res.json({ ok: true });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
   /** Cost/quota dashboard payload (PRD 406–427). */
   app.get('/api/usage', requireAuth, (req, res) => {
     res.json(stack.costManager.snapshot());

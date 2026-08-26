@@ -293,11 +293,36 @@ export class CostManager {
 /** Merges env/config overrides over DEFAULT_LIMITS. */
 export function buildLimits(config = {}) {
   const out = {};
+  
+  function getDaysInCycle(resetDay, now = new Date()) {
+    const day = Number(resetDay) || 1;
+    if (day === 1) return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const currentDay = now.getDate();
+    let sm = now.getMonth(), sy = now.getFullYear();
+    if (currentDay < day) { sm -= 1; if (sm < 0) { sm = 11; sy -= 1; } }
+    let em = sm + 1, ey = sy;
+    if (em > 11) { em = 0; ey += 1; }
+    const start = new Date(sy, sm, day);
+    const end = new Date(ey, em, day);
+    return Math.round((end - start) / 86400000);
+  }
+
   for (const [name, base] of Object.entries(DEFAULT_LIMITS)) {
-    out[name] = { ...base, ...((config.providerLimits || {})[name] || {}) };
+    const extra = (config.providerLimits || {})[name] || {};
+    out[name] = { ...base, ...extra };
+    const days = getDaysInCycle(out[name].resetDay);
+    if (out[name].monthlyUnits) {
+      out[name].dailyUnits = Math.floor(out[name].monthlyUnits / days);
+    }
   }
   for (const [name, extra] of Object.entries(config.providerLimits || {})) {
-    if (!out[name]) out[name] = { tier: TIER.PREMIUM, unitCostUsd: 0, freeUnitsPerMonth: 0, dailyUnits: 0, monthlyUnits: 0, ...extra };
+    if (!out[name]) {
+      out[name] = { tier: TIER.PREMIUM, unitCostUsd: 0, freeUnitsPerMonth: 0, dailyUnits: 0, monthlyUnits: 0, ...extra };
+      const days = getDaysInCycle(out[name].resetDay);
+      if (out[name].monthlyUnits) {
+        out[name].dailyUnits = Math.floor(out[name].monthlyUnits / days);
+      }
+    }
   }
   return out;
 }
