@@ -451,7 +451,20 @@ export function createApp({ config = loadConfig(), store = new Store(config.data
 
 export async function main() {
   const config = loadConfig();
-  const store = new Store(config.dataDir);
+  const useSupabase = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  
+  let store;
+  if (useSupabase) {
+    // Dynamic import to avoid loading Supabase in fs-only mode
+    const { SupabaseStore } = await import('./stores/supabase-store.js');
+    store = new SupabaseStore({
+      url: process.env.SUPABASE_URL,
+      serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      bucket: process.env.SUPABASE_BUCKET || 'media',
+    });
+  } else {
+    store = new Store(config.dataDir);
+  }
 
   try {
     const restored = await Promise.race([
@@ -465,29 +478,65 @@ export async function main() {
     console.warn(`[restore] failed: ${err.message}`);
   }
 
-  const app = createApp({ config, store });
+  const baseApp = createApp({ config, store });
+  let app = baseApp;
 
-  // Even when the internal scheduler is enabled it goes through the same locked
-  // cycle as the cron endpoint, so the two can never poll the same profile
-  // twice. In cron mode `schedule()` is a no-op.
+  // For Supabase, we must wrap every request in a serialized hydrate/flush cycle
+  if (useSupabase) {
+    let chain = Promise.resolve();
+    const serialise = (fn) => {
+      const next = chain.then(fn, fn);
+      chain = next.then(() => {}, () => {});
+      return next;
+    };
+
+    app = express();
+    app.use((req, res, next) => {
+      serialise(async () => {
+        await store.hydrate();
+        const done = new Promise((resolve) => {
+          let settled = false;
+          const finish = () => { if (!settled) { settled = true; resolve(); } };
+          res.on('finish', finish);
+          res.on('close', finish);
+        });
+        baseApp(req, res, next);
+        await done;
+        try { await store.flush(); } catch (e) { console.error(`[db] flush failed: ${e.message}`); }
+      });
+    });
+  }
+
+  const pollLock = useSupabase 
+    ? new (await import('./stores/supabase-lock.js')).SupabasePollLock(store.rest, { staleMs: (config.pollLockStaleMinutes ?? 20) * 60 * 1000 })
+    : null;
+
   schedule(config, store, {
     keepAlive: true,
-    onPoll: (s, c) => runCronCycle(s, c, { owner: 'internal-scheduler', lock: pollLock }),
+    onPoll: async (s, c) => {
+      if (useSupabase) await store.hydrate();
+      const result = await runCronCycle(s, c, { owner: 'internal-scheduler', lock: pollLock });
+      if (useSupabase) await store.flush();
+      return result;
+    },
   });
 
-  await cleanupOldMedia(store, config);
-  setInterval(() => {
-    cleanupOldMedia(store, config)
-      .then((r) => {
-        if (!r.skipped && r.deleted > 0) {
-          console.log(`[retention] removed ${r.deleted} file(s), freed ${(r.freedBytes / 1024 / 1024).toFixed(2)} MB`);
-        }
-      })
-      .catch((err) => console.warn(`[retention] failed: ${err.message}`));
-  }, 30 * 60 * 1000);
+  if (!useSupabase) {
+    await cleanupOldMedia(store, config);
+    setInterval(() => {
+      cleanupOldMedia(store, config)
+        .then((r) => {
+          if (!r.skipped && r.deleted > 0) {
+            console.log(`[retention] removed ${r.deleted} file(s), freed ${(r.freedBytes / 1024 / 1024).toFixed(2)} MB`);
+          }
+        })
+        .catch((err) => console.warn(`[retention] failed: ${err.message}`));
+    }, 30 * 60 * 1000);
+  }
 
   app.listen(config.port, () => {
     console.log(`Instagram Monitor listening on http://localhost:${config.port}`);
+    if (useSupabase) console.log(`Connected to Supabase DB (${process.env.SUPABASE_URL})`);
     if (config.cronMode) {
       console.log('Cron mode: polling only happens when POST /api/poll is triggered externally.');
     } else {
