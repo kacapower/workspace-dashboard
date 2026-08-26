@@ -243,7 +243,14 @@ body {
 }
 
 /* ---- Toast ---- */
-.toast-show { animation: toastIn 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+}
+.toast-show { animation: toastIn 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2) forwards; }
 
 @keyframes toastIn {
   from { opacity: 0; transform: translate(-50%, 16px) scale(0.96); }
