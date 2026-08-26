@@ -69,9 +69,9 @@ export function parseCookies(req) {
 export function sessionCookie(value, secret) {
   const mac = sign(secret + value);
   const cookieValue = `${value}.${mac}`;
-  return `${COOKIE_NAME}=${cookieValue}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${COOKIE_MAX_AGE_DAYS * 24 * 60 * 60}`;
+  return `${COOKIE_NAME}=${cookieValue}; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=${COOKIE_MAX_AGE_DAYS * 24 * 60 * 60}`;
 }
 
 export function clearSessionCookie() {
-  return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+  return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=None; Secure; Max-Age=0`;
 }
