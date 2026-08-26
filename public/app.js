@@ -431,7 +431,7 @@ function renderHistorySections() {
     return `<div class="text-[#8e8e93] text-sm py-8 text-center">No profiles yet. Add your first Instagram profile in Config.</div>`;
   }
   return usernames.map((username) => `
-    <section class="card p-6">
+    <section class="card p-4 sm:p-6">
       <div class="flex items-center justify-between gap-3 mb-5">
         <h2 class="text-lg font-bold truncate">@${escapeHtml(username)}</h2>
       </div>
@@ -694,7 +694,7 @@ function renderHeatmap(filterUsername = null) {
   }
 
   return `
-    <section class="card p-6 mb-6">
+    <div class="mb-6">
       <h2 class="text-lg font-bold mb-4">${filterUsername ? `@${filterUsername} Activity` : `Activity Heatmap`}</h2>
       <div class="flex">
         <!-- Y-axis labels -->
@@ -709,7 +709,7 @@ function renderHeatmap(filterUsername = null) {
         </div>
         
         <!-- Grid and X-axis -->
-        <div class="flex-1 overflow-x-auto pb-2" dir="rtl">
+        <div class="flex-1 min-w-0 overflow-x-auto pb-2" dir="rtl">
           <div class="relative w-max" dir="ltr">
             <!-- X-axis labels (Months) -->
             <div class="h-[18px] text-[10px] text-[#8e8e93] relative w-full mb-1">
@@ -731,7 +731,7 @@ function renderHeatmap(filterUsername = null) {
         <div class="w-3 h-3 rounded-sm bg-[#216e39] dark:bg-[#39d353]"></div>
         <span>More</span>
       </div>
-    </section>`;
+    </div>`;
 }
 
 function renderLeaderboardPage() {
@@ -790,7 +790,7 @@ function renderGraphsPage() {
 
   $('#main').innerHTML = `
     ${pageHeader('Graphs', 'Track follower and following trends over time.')}
-    ${renderHeatmap(graphUser)}
+    <div class="card p-4 sm:p-6 mb-6">${renderHeatmap(graphUser)}</div>
     <div class="flex flex-col sm:flex-row gap-3 mb-5">
       <select id="graph-user-select" class="input w-full sm:w-64">${userOpts}</select>
       <div class="flex gap-2 flex-wrap">
