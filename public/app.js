@@ -20,17 +20,22 @@ const ICONS = {
   data: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
   gallery: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>',
   quota: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  graphs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>',
   logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>',
 };
 
 const PAGES = [
   { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard },
   { id: 'leaderboard', label: 'Leaderboard', icon: ICONS.leaderboard },
+  { id: 'graphs', label: 'Graphs', icon: ICONS.graphs },
   { id: 'quota', label: 'API Quota', icon: ICONS.quota },
   { id: 'config', label: 'Config', icon: ICONS.config },
   { id: 'data', label: 'Data', icon: ICONS.data },
   { id: 'gallery', label: 'Gallery', icon: ICONS.gallery },
 ];
+
+let graphUser = null;
+let graphWindow = '30';
 
 const $ = (sel) => app.querySelector(sel);
 
@@ -620,6 +625,146 @@ function renderLeaderboardTable() {
   });
 }
 
+function renderGraphsPage() {
+  const profiles = status?.profiles || [];
+  if (!profiles.length) {
+    $('#main').innerHTML = `${pageHeader('Graphs', 'Visualize follower growth over time.')}<div class="card p-6 text-[#8e8e93]">No profiles tracked yet.</div>`;
+    return;
+  }
+  
+  if (!graphUser) graphUser = profiles[0].username;
+
+  const userOpts = profiles.map(p => `<option value="${escapeHtml(p.username)}" ${graphUser === p.username ? 'selected' : ''}>@${escapeHtml(p.username)}</option>`).join('');
+  
+  const windowOpts = [
+    ['7', '1 Week'],
+    ['30', '1 Month'],
+    ['90', '3 Months'],
+    ['180', '6 Months'],
+    ['365', '1 Year'],
+    ['all', 'All-time']
+  ];
+
+  $('#main').innerHTML = `
+    ${pageHeader('Graphs', 'Track follower and following trends over time.')}
+    <div class="flex flex-col sm:flex-row gap-3 mb-5">
+      <select id="graph-user-select" class="input w-full sm:w-64">${userOpts}</select>
+      <div class="flex gap-2 flex-wrap">
+        ${windowOpts.map(([key, label]) => `
+          <button class="btn-pill ${graphWindow === key ? 'btn-primary' : 'btn-tertiary'} graph-window" data-window="${key}">${label}</button>`).join('')}
+      </div>
+    </div>
+    <div class="card p-6 flex flex-col h-[65vh] min-h-[400px]">
+      <div class="relative w-full h-full flex-grow">
+        <canvas id="userChart"></canvas>
+      </div>
+    </div>`;
+
+  setTimeout(drawUserChart, 0);
+
+  $('#graph-user-select').addEventListener('change', (e) => {
+    graphUser = e.target.value;
+    renderGraphsPage();
+  });
+
+  app.querySelectorAll('.graph-window').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      graphWindow = btn.dataset.window;
+      renderGraphsPage();
+    });
+  });
+}
+
+function drawUserChart() {
+  const canvas = document.getElementById('userChart');
+  if (!canvas || !window.Chart) return;
+
+  const snaps = (historyData?.profiles || {})[graphUser] || [];
+  const now = Date.now();
+  const cutoff = graphWindow === 'all' ? null : now - Number(graphWindow) * 86400000;
+
+  const filtered = snaps.filter(s => (!cutoff || Date.parse(s.at) >= cutoff) && s.profile);
+  
+  const dates = [];
+  const followers = [];
+  const following = [];
+
+  for (const s of filtered) {
+    dates.push(new Date(s.at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }));
+    followers.push(s.profile.followersCount || 0);
+    following.push(s.profile.followingCount || 0);
+  }
+
+  if (window.myUserChart) window.myUserChart.destroy();
+  
+  if (!dates.length) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '14px sans-serif';
+    ctx.fillStyle = '#8e8e93';
+    ctx.textAlign = 'center';
+    ctx.fillText('Not enough data yet', canvas.width/2, canvas.height/2);
+    return;
+  }
+
+  window.myUserChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [
+        {
+          label: 'Followers',
+          data: followers,
+          borderColor: '#1ba673',
+          backgroundColor: '#1ba67320',
+          yAxisID: 'y',
+          tension: 0.3,
+          fill: true,
+          borderWidth: 2,
+          pointRadius: 2
+        },
+        {
+          label: 'Following',
+          data: following,
+          borderColor: '#ff5530',
+          backgroundColor: 'transparent',
+          yAxisID: 'y1',
+          tension: 0.3,
+          fill: false,
+          borderWidth: 2,
+          pointRadius: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display: false } },
+        y: { 
+          type: 'linear', 
+          display: true, 
+          position: 'left',
+          title: { display: true, text: 'Followers' },
+          ticks: { precision: 0 }
+        },
+        y1: { 
+          type: 'linear', 
+          display: true, 
+          position: 'right',
+          title: { display: true, text: 'Following' },
+          grid: { drawOnChartArea: false },
+          ticks: { precision: 0 }
+        }
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { usePointStyle: true } }
+      },
+      interaction: { mode: 'index', intersect: false }
+    }
+  });
+}
+
 function renderConfigPage() {
   const s = status;
   const autoInterval = (p) => p.isPrivate ? p.batchIntervalHours || s.batchIntervalHours : s.intervalHours;
@@ -1141,6 +1286,7 @@ async function renderQuotaPage() {
 
 async function renderPage() {
   if (page === 'leaderboard') return renderLeaderboardPage();
+  if (page === 'graphs') return renderGraphsPage();
   if (page === 'quota') return renderQuotaPage();
   if (page === 'config') return renderConfigPage();
   if (page === 'data') return renderDataPage();
