@@ -35,6 +35,7 @@ export function createApp({ config = loadConfig(), store = new Store(config.data
 
   const syncDebouncer = createSyncDebouncer(config, store);
   store.onChange(() => syncDebouncer.schedule());
+  app.syncDebouncer = syncDebouncer;
 
   // Read-only view of the persisted cost state for the dashboard. Poll runs
   // build their own stack so a long-lived server never caches quota state.
@@ -534,7 +535,7 @@ export async function main() {
     }, 30 * 60 * 1000);
   }
 
-  app.listen(config.port, () => {
+  const server = app.listen(config.port, () => {
     console.log(`Instagram Monitor listening on http://localhost:${config.port}`);
     if (useSupabase) console.log(`Connected to Supabase DB (${process.env.SUPABASE_URL})`);
     if (config.cronMode) {
@@ -543,6 +544,27 @@ export async function main() {
       console.log(`Poll interval: every ${config.pollIntervalHours} hour(s)`);
     }
   });
+
+  async function shutdown(signal) {
+    console.log(`\n[system] Received ${signal}, starting graceful shutdown...`);
+    if (baseApp.syncDebouncer) {
+      console.log('[hf] Flushing pending data to dataset before exit...');
+      await baseApp.syncDebouncer.flush();
+      console.log('[hf] Sync complete.');
+    }
+    server.close(() => {
+      console.log('[system] Server stopped.');
+      process.exit(0);
+    });
+    // Force exit if hanging
+    setTimeout(() => {
+      console.error('[system] Force exiting after 15s timeout.');
+      process.exit(1);
+    }, 15000);
+  }
+
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
 }
 
 // pathToFileURL, not `file://${argv[1]}`: on Windows argv[1] is a backslashed
