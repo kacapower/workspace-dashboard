@@ -1402,7 +1402,7 @@ const gallery = { kind: 'all', user: 'all' };
 
 function renderShell() {
   app.innerHTML = `
-    <div class="flex min-h-screen">
+    <div class="min-h-screen bg-[var(--bg)]">
       <!-- Desktop Sidebar -->
       <aside id="sidebar" class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-[var(--bg)] border-r border-[var(--card-border)] p-4 overflow-y-auto z-40">
         <div class="px-3 py-4 mb-4">
@@ -1421,8 +1421,10 @@ function renderShell() {
       </aside>
       
       <!-- Main Content Area -->
-      <main class="flex-1 min-w-0 md:ml-64 px-4 py-6 sm:px-8 sm:py-8 max-w-5xl mb-16 md:mb-0 mx-auto">
-        <div id="main"></div>
+      <main class="min-w-0 md:pl-64 mb-16 md:mb-0 w-full">
+        <div class="px-4 py-6 sm:px-8 sm:py-8 w-full">
+          <div id="main"></div>
+        </div>
       </main>
     </div>
     
@@ -1438,7 +1440,7 @@ function renderShell() {
   app.querySelectorAll('.nav-item[data-page]').forEach((btn) => {
     btn.addEventListener('click', () => {
       page = btn.dataset.page;
-      renderPage();
+      renderShell();
     });
   });
 
