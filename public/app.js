@@ -265,51 +265,45 @@ function profileStatCard(username) {
   const avatar = latestAvatar(username);
   const count = (v) => (typeof v === 'number' ? v.toLocaleString() : '—');
   const statBox = (label, value) => `
-    <div class="flex flex-col items-center rounded-xl bg-[var(--soft)] py-2.5">
-      <div class="font-bold tabular-nums text-sm text-[var(--ink)]">${escapeHtml(value)}</div>
-      <div class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide mt-0.5">${label}</div>
+    <div class="flex flex-col items-center rounded-xl bg-[#f7f8fa] dark:bg-[#1c2430] py-2.5">
+      <div class="font-bold tabular-nums text-sm">${escapeHtml(value)}</div>
+      <div class="text-[10px] font-semibold text-[#8e8e93] uppercase tracking-wide mt-0.5">${label}</div>
     </div>`;
-    
   if (!snap) {
     return `
       <div class="card p-4 card-enter">
         <div class="flex items-center gap-3">
-          <span class="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--soft)] font-bold text-[var(--muted)]">${avatarInitial(username)}</span>
+          <span class="flex h-12 w-12 items-center justify-center rounded-full bg-[#e7e9ee] dark:bg-[#262d38] font-bold text-[#8e8e93]">${avatarInitial(username)}</span>
           <div class="min-w-0">
-            <div class="font-bold truncate text-[var(--ink)]">@${escapeHtml(username)}</div>
-            <div class="text-xs text-[var(--muted)]">no data yet</div>
+            <div class="font-bold truncate">@${escapeHtml(username)}</div>
+            <div class="text-xs text-[#8e8e93]">no data yet</div>
           </div>
         </div>
       </div>`;
   }
-  
   const prof = snap.profile || {};
-  const bio = prof.biography ? `<p class="mt-3 text-xs text-[var(--slate)] line-clamp-2">${escapeHtml(prof.biography)}</p>` : '';
-  const privateBadge = prof.isPrivate ? '<span class="chip chip-idle bg-[var(--soft)] text-[var(--muted)] border border-[var(--card-border)]">private</span>' : '';
-  const storiesBadge = meta && meta.trackStories ? '<span class="chip chip-story bg-[var(--primary)] text-white">stories</span>' : '';
-  const hasStories = snap.stories && snap.stories.length > 0;
-  
+  const bio = prof.biography ? `<p class="mt-3 text-xs text-[#5f5f5f] dark:text-[#a8b3c0] line-clamp-2">${escapeHtml(prof.biography)}</p>` : '';
+  const privateBadge = prof.isPrivate ? '<span class="chip chip-idle">private</span>' : '';
+  const storiesBadge = meta && meta.trackStories ? '<span class="chip chip-story">stories</span>' : '';
   return `
     <div class="card p-4 card-enter">
       <div class="flex items-center gap-3">
         ${avatar
-          ? `<div class="${hasStories ? 'story-ring' : ''} inline-flex"><img class="h-12 w-12 rounded-full border border-[var(--card-border)] object-cover" src="${escapeHtml(mediaUrl(username, avatar))}" alt="" /></div>`
-          : `<div class="${hasStories ? 'story-ring' : ''} inline-flex"><span class="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--soft)] font-bold text-[var(--muted)]">${avatarInitial(username)}</span></div>`}
+          ? `<img class="h-12 w-12 rounded-full border border-[#eaecf0] dark:border-[#262d38] object-cover" src="${escapeHtml(mediaUrl(username, avatar))}" alt="" />`
+          : `<span class="flex h-12 w-12 items-center justify-center rounded-full bg-[#e7e9ee] dark:bg-[#262d38] font-bold text-[#8e8e93]">${avatarInitial(username)}</span>`}
         <div class="min-w-0 flex-1">
-          <div class="font-bold truncate text-[var(--ink)]">@${escapeHtml(username)}</div>
+          <div class="font-bold truncate">@${escapeHtml(username)}</div>
           <div class="mt-1 flex flex-wrap gap-1">${privateBadge}${storiesBadge}</div>
         </div>
         <div class="text-right">
-          <div class="text-[10px] text-[var(--muted)] font-semibold uppercase tracking-wide">last change</div>
-          <div class="text-xs font-semibold mt-0.5 text-[var(--ink)]">${fmtTime(snap.at)}</div>
+          <div class="text-[10px] text-[#8e8e93] font-semibold uppercase tracking-wide">last change</div>
+          <div class="text-xs font-semibold mt-0.5">${fmtTime(snap.at)}</div>
         </div>
       </div>
-      <div class="mt-4 flex flex-col gap-2">
-        <div class="grid grid-cols-3 gap-2">
-          ${statBox('followers', count(prof.followersCount))}
-          ${statBox('following', count(prof.followingCount))}
-          ${statBox('posts', count(prof.postsCount))}
-        </div>
+      <div class="mt-4 flex flex-col">
+        ${statBox('followers', count(prof.followersCount))}
+        ${statBox('following', count(prof.followingCount))}
+        ${statBox('posts', count(prof.postsCount))}
       </div>
       <div class="mt-3">
         <div class="flex items-center justify-between mb-1">
@@ -320,8 +314,6 @@ function profileStatCard(username) {
       ${bio}
     </div>`;
 }
-
-
 
 function renderProfileCards() {
   const usernames = visibleAccounts();
@@ -407,23 +399,23 @@ function visibleAccounts() {
 function renderProfileTimeline(username) {
   const list = ((historyData || {}).profiles || {})[username] || [];
   if (!list.length) {
-    return `<div class="text-center py-8 text-[var(--muted)]">No snapshots yet. Run the first poll from Config.</div>`;
+    return `<div class="text-center py-8 text-[#8e8e93]">No snapshots yet. Run the first poll from Config.</div>`;
   }
   const reversed = [...list].reverse();
   return `
-    <div class="relative space-y-6 pl-6 border-l border-[var(--card-border)]">
+    <div class="relative space-y-6 pl-6 border-l border-[#eaecf0] dark:border-[#262d38]">
       ${reversed.map((snap) => `
         <div class="relative fade-in">
-          <span class="absolute -left-[31px] top-1 h-3 w-3 rounded-full border-2 border-[var(--ink)] bg-[var(--bg)]"></span>
+          <span class="absolute -left-[31px] top-1 h-3 w-3 rounded-full border-2 border-[#0a0a0a] dark:border-white bg-white dark:bg-[#0d1117]"></span>
           <div class="card p-5">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
               <div class="flex items-center gap-2">
-                <span class="font-semibold text-[var(--ink)]">${fmtTime(snap.at)}</span>
-                ${snap.profile.isPrivate ? '<span class="chip chip-idle bg-[var(--soft)] text-[var(--muted)]">private · avatar only</span>' : ''}
+                <span class="font-semibold">${fmtTime(snap.at)}</span>
+                ${snap.profile.isPrivate ? '<span class="chip chip-idle">private · avatar only</span>' : ''}
               </div>
               ${snap.changeCount > 0
-                ? `<span class="chip chip-error bg-[var(--color-red)] text-white">${snap.changeCount} change${snap.changeCount === 1 ? '' : 's'}</span>`
-                : `<span class="chip chip-ok bg-[var(--color-green)] text-white">No changes</span>`}
+                ? `<span class="chip chip-error">${snap.changeCount} change${snap.changeCount === 1 ? '' : 's'}</span>`
+                : `<span class="chip chip-ok">No changes</span>`}
             </div>
             ${snap.changeCount > 0 ? `<div class="flex flex-col gap-4">${snap.changes.map((c) => changeItem(username, c)).join('')}</div>` : ''}
             ${renderStories(username, snap.stories)}
@@ -432,8 +424,6 @@ function renderProfileTimeline(username) {
       `).join('')}
     </div>`;
 }
-
-
 
 function renderHistorySections() {
   const usernames = visibleAccounts();
@@ -511,20 +501,20 @@ function leaderboardTable() {
     { key: 'avatars', label: 'Avatars' },
     { key: 'followers', label: 'Followers Δ' },
   ];
-  if (!rows.length) return '<p class="text-[var(--muted)] text-sm py-8 text-center">No profiles to rank yet.</p>';
+  if (!rows.length) return '<p class="text-[#8e8e93] text-sm py-8 text-center">No profiles to rank yet.</p>';
   const header = cols.map((c) => {
     const active = lbSort.key === c.key;
     const arrow = active ? (lbSort.dir === -1 ? ' ▼' : ' ▲') : '';
-    return `<button class="lb-sort font-semibold text-[var(--slate)] text-xs uppercase tracking-wide hover:text-[var(--ink)] ${active ? 'text-[var(--ink)]' : ''}" data-key="${c.key}">${c.label}${arrow}</button>`;
+    return `<button class="lb-sort font-semibold text-[#45515e] dark:text-[#a8b3c0] text-xs uppercase tracking-wide hover:text-[#0a0a0a] ${active ? 'text-[#0a0a0a] dark:text-white' : ''}" data-key="${c.key}">${c.label}${arrow}</button>`;
   }).join('');
   return `
     <div class="overflow-x-auto">
-      <table class="w-full text-sm text-[var(--ink)]">
+      <table class="w-full text-sm">
         <thead>
-          <tr class="border-b border-[var(--card-border)]">
-            <th class="text-left py-2 pr-3 text-xs font-semibold text-[var(--muted)] uppercase tracking-wide w-14">Pos</th>
-            <th class="text-left py-2 pr-3 text-xs font-semibold text-[var(--muted)] uppercase tracking-wide">Profile</th>
-            <th class="text-right py-2 px-2 text-xs font-semibold text-[var(--muted)] uppercase tracking-wide">Trend</th>
+          <tr class="border-b border-[#eaecf0] dark:border-[#262d38]">
+            <th class="text-left py-2 pr-3 text-xs font-semibold text-[#8e8e93] uppercase tracking-wide w-14">Pos</th>
+            <th class="text-left py-2 pr-3 text-xs font-semibold text-[#8e8e93] uppercase tracking-wide">Profile</th>
+            <th class="text-right py-2 px-2 text-xs font-semibold text-[#8e8e93] uppercase tracking-wide">Trend</th>
             ${cols.map((c) => `<th class="text-right py-2 px-2">${header[cols.indexOf(c)]}</th>`).join('')}
           </tr>
         </thead>
@@ -533,15 +523,15 @@ function leaderboardTable() {
             const accent = DRIVER_COLORS[i % DRIVER_COLORS.length];
             const avatar = latestAvatar(r.username);
             return `
-              <tr class="border-b border-[var(--card-border)] last:border-0 hover:bg-[var(--soft)] transition-colors">
+              <tr class="border-b border-[#f0f1f4] dark:border-[#20242e] last:border-0">
                 <td class="py-3 pr-3">${posBadge(i + 1)}</td>
                 <td class="py-3 pr-3">
                   <div class="flex items-center gap-3">
                     <span class="inline-block h-2.5 w-2.5 rounded-full shrink-0" style="background:${accent}"></span>
-                    ${avatar ? `<img class="h-8 w-8 rounded-full border border-[var(--card-border)] object-cover" src="${escapeHtml(mediaUrl(r.username, avatar))}" alt="" />` : ''}
+                    ${avatar ? `<img class="h-8 w-8 rounded-full border border-[#eaecf0] object-cover" src="${escapeHtml(mediaUrl(r.username, avatar))}" alt="" />` : ''}
                     <div class="min-w-0">
-                      <div class="font-semibold truncate">@${escapeHtml(r.username)}${r.isPrivate ? ' <span class="text-[var(--muted)]">· private</span>' : ''}</div>
-                      <div class="text-[10px] text-[var(--muted)]">${r.snapCount} snapshot${r.snapCount === 1 ? '' : 's'}</div>
+                      <div class="font-semibold truncate">@${escapeHtml(r.username)}${r.isPrivate ? ' <span class="text-[#8e8e93]">· private</span>' : ''}</div>
+                      <div class="text-[10px] text-[#8e8e93]">${r.snapCount} snapshot${r.snapCount === 1 ? '' : 's'}</div>
                     </div>
                   </div>
                 </td>
@@ -557,7 +547,6 @@ function leaderboardTable() {
       </table>
     </div>`;
 }
-
 
 /* ---------- Pages ---------- */
 
@@ -1402,49 +1391,62 @@ const gallery = { kind: 'all', user: 'all' };
 
 function renderShell() {
   app.innerHTML = `
-    <div class="min-h-screen bg-[var(--bg)]">
-      <!-- Desktop Sidebar -->
-      <aside id="sidebar" class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-[var(--bg)] border-r border-[var(--card-border)] p-4 overflow-y-auto z-40">
-        <div class="px-3 py-4 mb-4">
-          <div class="font-bold text-xl tracking-tight text-[var(--ink)]">Instagram Monitor</div>
+    <header class="sm:hidden sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-[#eaecf0] dark:border-[#262d38] px-4 h-14" style="background: var(--bg)">
+      <div class="flex items-center gap-3">
+        <button id="menu-btn" class="touch-target inline-flex items-center justify-center rounded-full border border-[#eaecf0] dark:border-[#262d38] px-3 text-[#45515e] dark:text-[#a8b3c0]" aria-label="Open menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-5 w-5"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+        </button>
+        <div class="font-bold tracking-tight">Instagram Monitor</div>
+      </div>
+      <div class="text-[10px] text-[#8e8e93] uppercase tracking-wider">change monitor</div>
+    </header>
+
+    <div id="scrim" class="fixed inset-0 z-30 hidden bg-black/40 sm:hidden"></div>
+
+    <div class="flex min-h-screen">
+      <aside id="sidebar" class="sidebar fixed inset-y-0 left-0 z-40 w-56 -translate-x-full transition-transform duration-200 sm:sticky sm:top-0 sm:h-screen sm:translate-x-0 sm:transition-none shrink-0 border-r border-[#eaecf0] dark:border-[#262d38] p-4 flex flex-col gap-1 overflow-y-auto" style="background: var(--bg)">
+        <div class="px-3 py-4 mb-2">
+          <div class="font-bold tracking-tight">Instagram Monitor</div>
+          <div class="text-[10px] text-[#8e8e93] uppercase tracking-wider mt-1">change monitor</div>
         </div>
-        <div class="flex flex-col gap-2">
         ${PAGES.map((p) => `
-          <button class="nav-item flex items-center gap-4 px-4 py-3 rounded-xl transition-colors ${page === p.id ? 'text-[var(--primary)] font-semibold bg-[var(--soft)]' : 'text-[var(--ink)] hover:bg-[var(--soft)]'}" data-page="${p.id}">
-            <div class="w-6 h-6">${p.icon}</div> <span class="nav-label text-sm">${p.label}</span>
+          <button class="nav-item ${page === p.id ? 'active' : ''}" data-page="${p.id}">
+            ${p.icon} <span class="nav-label">${p.label}</span>
           </button>`).join('')}
-        </div>
         <div class="flex-1"></div>
-        <button id="logout-btn" class="nav-item flex items-center gap-4 px-4 py-3 rounded-xl text-[var(--color-red)] hover:bg-[var(--soft)] transition-colors">
-          <div class="w-6 h-6">${ICONS.logout}</div> <span class="nav-label text-sm">Log out</span>
-        </button>
+        <button id="logout-btn" class="nav-item">${ICONS.logout} <span class="nav-label">Log out</span></button>
       </aside>
-      
-      <!-- Main Content Area -->
-      <main class="min-w-0 md:pl-64 mb-16 md:mb-0 w-full">
-        <div class="px-4 py-6 sm:px-8 sm:py-8 w-full">
-          <div id="main"></div>
-        </div>
+      <main class="flex-1 min-w-0 px-4 py-6 sm:px-6 sm:py-8 max-w-5xl">
+        <div id="main"></div>
       </main>
-    </div>
-    
-    <!-- Mobile Bottom Tab Bar -->
-    <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 flex justify-around items-center border-t border-[var(--card-border)] bg-[var(--bg)] h-14 safe-area-bottom">
-      ${PAGES.filter(p => ['dashboard','gallery','graphs','config'].includes(p.id)).map(p => `
-        <button class="nav-item flex flex-col items-center justify-center w-full h-full text-[var(--muted)] transition-colors ${page === p.id ? 'text-[var(--primary)]' : 'hover:text-[var(--ink)]'}" data-page="${p.id}">
-          <div class="h-6 w-6">${p.icon}</div>
-        </button>
-      `).join('')}
-    </nav>`;
+    </div>`;
+
+  const sidebar = $('#sidebar');
+  const scrim = $('#scrim');
+  const setMenuOpen = (open) => {
+    sidebar.classList.toggle('-translate-x-full', !open);
+    scrim.classList.toggle('hidden', !open);
+    $('#menu-btn')?.setAttribute('aria-expanded', String(open));
+  };
+
+  $('#menu-btn').addEventListener('click', () => setMenuOpen(true));
+  scrim.addEventListener('click', () => setMenuOpen(false));
 
   app.querySelectorAll('.nav-item[data-page]').forEach((btn) => {
     btn.addEventListener('click', () => {
       page = btn.dataset.page;
-      renderShell();
+      
+      // Update sidebar visual feedback immediately
+      app.querySelectorAll('.nav-item[data-page]').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      setMenuOpen(false);
+      renderPage();
     });
   });
 
   $('#logout-btn').addEventListener('click', async () => {
+    setMenuOpen(false);
     await api('/api/logout', { method: 'POST' });
     status.locked = true;
     render();
@@ -1452,8 +1454,6 @@ function renderShell() {
 
   renderPage();
 }
-
-
 
 async function renderQuotaPage() {
   $('#main').innerHTML = `
